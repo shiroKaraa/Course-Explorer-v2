@@ -501,7 +501,6 @@ class _MiniQuizCardState extends State<MiniQuizCard> {
         ],
       );
 }
-
 class StateClassificationCard extends StatelessWidget {
   const StateClassificationCard({super.key});
 
@@ -544,14 +543,15 @@ class StateClassificationCard extends StatelessWidget {
     ),
     (
       '_favoriteCount di HomeDashboardPage',
-      'Local',
-      'Dimiliki HomeDashboardPage, dikirim ke dua child lewat constructor + callback. Contoh prop drilling.',
+      'Local (SSOT)',
+      'Satu-satunya pemilik nilai. Child hanya menerima lewat constructor + callback. Contoh Single Source of Truth.',
       'setState()',
     ),
   ];
 
-  Color _colorFor(String kind) =>
-      kind == 'Shared' ? AppColors.success : AppColors.primary;
+  Color _colorFor(String kind) => kind.startsWith('Shared')
+      ? AppColors.success
+      : (kind.contains('SSOT') ? AppColors.warn : AppColors.primary);
 
   @override
   Widget build(BuildContext context) => AppCard(
@@ -625,13 +625,14 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
       borderColor: AppColors.warn.withValues(alpha: 0.35),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         cardHeader(
-          Icons.account_tree,
-          'Prop Drilling',
-          Text('Tahap 2', style: ts(12, color: Colors.black54)),
+          Icons.arrow_upward,
+          'Lifting State Up',
+          Text('Tahap 3', style: ts(12, color: Colors.black54)),
+          color: AppColors.warn,
         ),
         gap(10),
         hint(
-            'Parent memiliki _favoriteCount. Dua child menerima data yang sama lewat constructor; satu child mengirim aksi balik lewat callback.'),
+            'HomeDashboardPage memiliki _favoriteCount. Tiga child di bawah menerima nilai yang sama lewat constructor; hanya FavoriteTogglePanel yang juga mengirim aksi balik.'),
         gap(12),
         Row(children: [
           Expanded(
@@ -649,8 +650,10 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
           ),
         ]),
         gap(10),
+        DashboardStatusBar(favoriteCount: _favoriteCount),
+        gap(10),
         hint(
-            'Jika ingin menambah child ketiga yang butuh nilai yang sama, kita harus menambah satu constructor lagi.'),
+            'Ketiga child selalu menampilkan angka yang sama karena nilainya berasal dari satu sumber. Tidak ada duplikasi state.'),
       ]),
     );
   }
@@ -678,10 +681,11 @@ class CourseSummaryTile extends StatelessWidget {
                 style: ts(12, w: FontWeight.bold, color: AppColors.primary)),
           ]),
           gap(6),
-          Text('Favorite saat ini:',
-              style: ts(11, color: Colors.black54)),
+          Text('Favorite saat ini:', style: ts(11, color: Colors.black54)),
           Text('$favoriteCount',
               style: ts(22, w: FontWeight.bold, color: AppColors.primary)),
+          gap(4),
+          hint('read-only dari parent'),
         ]),
       );
 }
@@ -733,6 +737,36 @@ class FavoriteTogglePanel extends StatelessWidget {
               ),
             ),
           ]),
+          gap(4),
+          hint('aksi naik lewat callback'),
+        ]),
+      );
+}
+
+class DashboardStatusBar extends StatelessWidget {
+  final int favoriteCount;
+
+  const DashboardStatusBar({super.key, required this.favoriteCount});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.bg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(children: [
+          const Icon(Icons.info_outline, size: 16, color: AppColors.muted),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Status: $favoriteCount favorite aktif di dashboard',
+              style: ts(12, color: Colors.black87),
+            ),
+          ),
+          Text('child ke-3',
+              style: ts(10, italic: FontStyle.italic, color: AppColors.muted)),
         ]),
       );
 }
@@ -765,6 +799,42 @@ class PropDrillingNoteCard extends StatelessWidget {
           const Padding(
             padding: EdgeInsets.only(top: 4, right: 8),
             child: Icon(Icons.circle, size: 6, color: AppColors.warn),
+          ),
+          Expanded(
+            child: Text(text,
+                style: ts(12, color: Colors.black87, height: 1.4)),
+          ),
+        ]),
+      );
+}
+
+class LiftingStateUpNoteCard extends StatelessWidget {
+  const LiftingStateUpNoteCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.success.withValues(alpha: 0.35),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.arrow_upward,
+            'Catatan Lifting State Up',
+            Text('Tahap 3', style: ts(12, color: Colors.black54)),
+          ),
+          gap(10),
+          _bullet('State _favoriteCount diangkat ke ancestor terdekat yang membutuhkannya, yaitu HomeDashboardPage.'),
+          _bullet('HomeDashboardPage menjadi satu-satunya pemilik (Single Source of Truth). Tidak ada child yang menyimpan salinan nilai.'),
+          _bullet('Tiga child menerima nilai yang sama lewat constructor: CourseSummaryTile, FavoriteTogglePanel, dan DashboardStatusBar.'),
+          _bullet('Hanya FavoriteTogglePanel yang juga menerima callback (onIncrement / onDecrement), karena hanya dia yang mengubah nilai.'),
+          _bullet('Karena semua child membaca dari sumber yang sama, nilai di ketiganya selalu konsisten tanpa perlu sinkronisasi manual.'),
+        ]),
+      );
+
+  Widget _bullet(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 4, right: 8),
+            child: Icon(Icons.circle, size: 6, color: AppColors.success),
           ),
           Expanded(
             child: Text(text,
@@ -994,6 +1064,8 @@ class _ProfileTabPage extends StatelessWidget {
         const StateClassificationCard(),
         gap(),
         const PropDrillingNoteCard(),
+        gap(),
+        const LiftingStateUpNoteCard(),
         gap(),
         ...section(
           'Informasi Mahasiswa',

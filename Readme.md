@@ -11,3 +11,9 @@ Sebagai bagian dari praktikum, saya menambahkan tombol "Detail/Tutup" pada setia
 Tahap 2 : Masalah setState() Saat Aplikasi Membesar
 
 Saya membuat HomeDashboardPage sebagai parent yang menyimpan _favoriteCount, lalu meneruskan nilainya ke CourseSummaryTile dan FavoriteTogglePanel melalui constructor. Perubahan nilai dilakukan melalui callback onIncrement dan onDecrement. Dari percobaan ini, saya menemukan bahwa semakin banyak child yang membutuhkan state yang sama, semakin banyak parameter dan callback yang harus ditulis. Hal ini membuat kode lebih rumit, sehingga ValueNotifier atau ChangeNotifier bisa menjadi alternatif untuk mengurangi prop drilling.
+
+Tahap 3 : Lifting State Up dan Single Source of Truth
+
+Pada tahap ini, saya menerapkan lifting state up dengan menjadikan HomeDashboardPage sebagai satu-satunya pemilik _favoriteCount. Nilainya diteruskan ke tiga child, yaitu CourseSummaryTile, FavoriteTogglePanel, dan DashboardStatusBar. Dengan begitu, semua widget menggunakan sumber data yang sama sehingga nilainya tetap konsisten tanpa perlu sinkronisasi manual. Namun, cara ini masih membutuhkan constructor dan callback untuk meneruskan data, sehingga ValueNotifier dan ChangeNotifier bisa menjadi solusi pada tahap berikutnya.
+
+Pada aplikasi saya, Single Source of Truth berarti nilai _favoriteCount hanya hidup di dalam _HomeDashboardPageState. Tidak ada child yang menyimpan salinan nilai ini. Semua widget yang menampilkan atau mengubahnya harus membaca atau memanggil callback ke parent tersebut. Konsekuensinya, tidak mungkin ada dua angka berbeda untuk data yang sama, dan setiap perubahan otomatis tercermin di seluruh child karena semuanya membaca dari sumber yang sama.
