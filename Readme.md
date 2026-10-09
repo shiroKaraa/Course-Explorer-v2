@@ -21,3 +21,8 @@ Pada aplikasi saya, Single Source of Truth berarti nilai _favoriteCount hanya hi
 Tahap 4 : ValueNotifier dan ValueListenableBuilder
 
 Saya menggunakan ValueNotifier<int> bernama favoriteCounter dan ValueListenableBuilder untuk menampilkan nilainya di tiga child. Tombol + dan − dapat mengubah nilai notifier secara langsung, sehingga widget lain ikut diperbarui tanpa callback dari parent. Kode menjadi lebih ringkas, tetapi notifier masih disimpan secara global. Karena itu, pengelolaannya akan dikembangkan menggunakan ChangeNotifier dan Provider pada tahap berikutnya.
+
+Tahap 5 : ChangeNotifier dan notifyListeners()
+
+Saya membuat CourseProvider dengan ChangeNotifier untuk menyimpan daftar favorite dan mengelolanya melalui method toggleFavorite(). Dengan ListenableBuilder, perubahan favorite langsung memperbarui jumlah dan ikon pada UI. Dibandingkan ValueNotifier, ChangeNotifier lebih fleksibel karena dapat mengelola beberapa state dan method dalam satu class. Namun, instance-nya masih global dan akan dikelola menggunakan Provider pada tahap berikutnya. 
+notifyListeners() memberi tahu widget yang mendengarkan bahwa state telah berubah, sehingga UI dapat diperbarui. Jika tidak dipanggil, nilai state tetap berubah, tetapi tampilan tidak otomatis ikut diperbarui.
