@@ -4,39 +4,69 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/demo_scaffold.dart';
 import 'course_detail_page.dart';
 
-class FavoritesPage extends StatelessWidget {
+class FavoritesPage extends StatefulWidget {
   final bool standalone;
 
   const FavoritesPage({super.key, this.standalone = false});
 
   @override
+  State<FavoritesPage> createState() => _FavoritesPageState();
+}
+
+class _FavoritesPageState extends State<FavoritesPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final provider = context.read<CourseProvider>();
+      if (!provider.hasLoaded && !provider.isLoading) {
+        provider.loadCourses();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
-    final favCodes = provider.favorites;
 
-    final content = withCourses((_, courses) {
-      final favCourses =
-          courses.where((c) => favCodes.contains(c.code)).toList();
-
-      return Column(children: [
+    return DemoScaffold(
+      body: Column(children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: _SummaryHeader(count: favCourses.length),
+          child: _SummaryHeader(count: provider.favoriteCount),
         ),
-        Expanded(
-          child: favCourses.isEmpty
-              ? _emptyState()
-              : _grid(context, favCourses, provider),
-        ),
-      ]);
-    });
+        Expanded(child: _body(context, provider)),
+      ]),
+    );
+  }
 
-    return standalone ? DemoScaffold(body: content) : content;
+  Widget _body(BuildContext context, CourseProvider provider) {
+    if (provider.isLoading && !provider.hasLoaded) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (provider.error != null && !provider.hasLoaded) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text('Gagal memuat data: ${provider.error}',
+              style: const TextStyle(color: Colors.red)),
+        ),
+      );
+    }
+
+    final favs = provider.favorites;
+    final favCourses =
+        provider.courses.where((c) => favs.contains(c.code)).toList();
+
+    if (favCourses.isEmpty) return _emptyState();
+    return _grid(context, favCourses);
   }
 
   Widget _emptyState() => Center(
@@ -54,12 +84,7 @@ class FavoritesPage extends StatelessWidget {
         ),
       );
 
-  Widget _grid(
-    BuildContext context,
-    List<Json> items,
-    CourseProvider provider,
-  ) =>
-      LayoutBuilder(
+  Widget _grid(BuildContext context, List<Course> items) => LayoutBuilder(
         builder: (context, c) => GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -74,7 +99,7 @@ class FavoritesPage extends StatelessWidget {
             return CourseCard(
               course: course,
               isFavorite: true,
-              onTap: () => go(context, CourseDetailPage(course: course)),
+              onTap: () => openCourse(context, course),
               onLongPress: () => _confirmRemove(context, course),
               onToggleFavorite: () => _confirmRemove(context, course),
             );
@@ -82,14 +107,12 @@ class FavoritesPage extends StatelessWidget {
         ),
       );
 
-  Future<void> _confirmRemove(BuildContext context, Json course) async {
-    final code = course.code;
+  Future<void> _confirmRemove(BuildContext context, Course course) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Hapus dari Favorite?'),
-        content: Text(
-            'Hapus "${course.str('title', 'Course')}" dari daftar favorite?'),
+        content: Text('Hapus "${course.title}" dari daftar favorite?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -104,7 +127,7 @@ class FavoritesPage extends StatelessWidget {
       ),
     );
     if (ok != true || !context.mounted) return;
-    context.read<CourseProvider>().toggleFavorite(code);
+    context.read<CourseProvider>().toggleFavorite(course.code);
     showMsg(context, 'Dihapus dari favorite.', color: Colors.red);
   }
 }
@@ -119,15 +142,15 @@ class _SummaryHeader extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.success.withValues(alpha: 0.12),
-              AppColors.successSoft,
+              AppColors.gold.withValues(alpha: 0.15),
+              AppColors.goldSoft,
             ],
           ),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.4)),
         ),
         child: Row(children: [
-          const Icon(Icons.star, color: AppColors.success, size: 28),
+          const Icon(Icons.star, color: AppColors.gold, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -136,8 +159,7 @@ class _SummaryHeader extends StatelessWidget {
                 Text('Course Favorite Saya',
                     style: ts(16, w: FontWeight.bold, color: Colors.black)),
                 gap(4),
-                Text('$count course',
-                    style: ts(12, color: Colors.black54)),
+                Text('$count course', style: ts(12, color: Colors.black54)),
               ],
             ),
           ),

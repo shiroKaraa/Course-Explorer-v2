@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/demo_scaffold.dart';
@@ -13,8 +14,12 @@ import '../widgets/info_card.dart';
 import '../widgets/scroll_page.dart';
 import '../widgets/status_helper.dart';
 
+void openCourse(BuildContext context, Course course) {
+  go(context, CourseDetailPage(course: course));
+}
+
 class CourseDetailPage extends StatefulWidget {
-  final Json course;
+  final Course course;
 
   const CourseDetailPage({super.key, required this.course});
 
@@ -28,17 +33,15 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
-    final code = course.str('code');
-
-    // watch: rebuild saat favorites berubah.
+    final code = course.code;
     final provider = context.watch<CourseProvider>();
     final isFavorite = provider.isFavorite(code);
-
     final status = course.status;
     final color = StatusHelper.color(status);
-    final credits = course.str('credits');
-    final progress = StatusHelper.progressOf(status);
-    final desc = course.str('description', 'Tidak ada deskripsi.');
+    final progress = course.progress;
+    final desc = course.description.isEmpty
+        ? 'Tidak ada deskripsi.'
+        : course.description;
 
     return DemoScaffold(
       body: ScrollPage([
@@ -55,7 +58,7 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             ]),
             gap(10),
             Row(children: [
-              Text('$code • $credits SKS', style: ts(13, color: Colors.black54)),
+              Text(course.summary, style: ts(13, color: Colors.black54)),
               const Spacer(),
               StatusHelper.badge(status),
             ]),
@@ -120,9 +123,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
           'Informasi Course',
           InfoCard([
             InfoRow(Icons.tag, 'Kode', code),
-            InfoRow(Icons.credit_card, 'SKS', '$credits SKS'),
-            InfoRow(Icons.person, 'Dosen', course.str('dosen')),
-            InfoRow(Icons.info_outline, 'Status', StatusHelper.label(status)),
+            InfoRow(Icons.credit_card, 'SKS', '${course.credits} SKS'),
+            InfoRow(Icons.person, 'Dosen', course.dosen),
+            InfoRow(Icons.info_outline, 'Status', course.statusLabel),
           ]),
         ),
         ...section('Identitas Mahasiswa', const IdentityCard()),
@@ -139,12 +142,11 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         gap(10),
         ElevatedButton.icon(
           onPressed: () {
-            // Toggle langsung ke provider.
             context.read<CourseProvider>().toggleFavorite(code);
             final nowFav = context.read<CourseProvider>().isFavorite(code);
             showMsg(
               context,
-              '${course.str('title', 'Course')} '
+              '${course.title} '
               '${nowFav ? 'ditandai sebagai favorite!' : 'dihapus dari favorite.'}',
               color: nowFav ? AppColors.success : AppColors.primary,
             );

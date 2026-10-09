@@ -9,7 +9,6 @@ import 'di.dart';
 import 'ui_helpers.dart';
 
 typedef Json = Map<String, dynamic>;
-
 final Future<Json> studentDataFuture = rootBundle
     .loadString('assets/data/student_data.json')
     .then((s) => jsonDecode(s) as Json);

@@ -59,3 +59,15 @@ Pada tahap ini, saya merapikan struktur folder dengan menerapkan separation of c
 Tahap 13 : 
 
 Pada tahap ini, saya menyatukan state favorites ke CourseProvider sebagai satu-satunya sumber data dan menghapus ValueNotifier lama. Saya juga memperbarui fitur favorite di halaman Courses dan Detail, menambahkan tombol favorite pada CourseCard, serta membuat halaman dan tab Favorites. Hasilnya, perubahan favorite langsung konsisten di seluruh halaman tanpa perlu callback atau prop drilling.
+
+Tahap 14 : Mini Project Integrasi: Course Explorer v2
+
+Pada tahap ini, saya mulai mengembangkan Course Explorer v2 sebagai mini project integrasi dari materi sebelumnya. Pengerjaan dibagi menjadi beberapa bagian, dimulai dari penerapan warna emas dan migrasi data JSON ke model Course pada 14-A dan 14-B. Selanjutnya, saya akan mengembangkan halaman Gallery, memperbarui Home dan Profile, menambahkan fitur Search dan Statistik, serta animasi. Tahap ini akan diakhiri dengan dokumentasi, pengujian, dan commit final.
+
+Tahap 14-A :
+
+Menambahkan warna aksen emas (gold = #FFB300, goldSoft = #FFF4D6) ke AppColors sebagai persiapan untuk aksen visual Course Explorer v2 bertema Undiksha. Warna ini akan dipakai untuk highlight bintang favorite, badge prestasi, dan tombol Demo/Catatan Tahapan. Tidak ada perilaku aplikasi yang berubah; warna lama tetap dipertahankan.
+
+Tahap 14-B :
+
+Saya memigrasikan data dari Json ke model Course pada seluruh screen utama, sehingga field dapat diakses langsung tanpa cast manual. Saya juga memindahkan fungsi openCourse() dan confirmRemoveFavorite() ke file yang sesuai untuk menghindari circular import. Selain itu, aksen favorite diubah menjadi warna emas agar sesuai dengan tema Undiksha, dan screen utama kini mengambil data langsung dari CourseProvider.

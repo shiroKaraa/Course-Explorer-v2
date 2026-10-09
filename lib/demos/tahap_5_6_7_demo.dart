@@ -4,12 +4,15 @@ import 'package:provider/provider.dart';
 import '../core/app_colors.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../screens/course_detail_page.dart';
 
+// ===== TAHAP 6 =====
 class ChangeNotifierDemoCard extends StatelessWidget {
   const ChangeNotifierDemoCard({super.key});
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
@@ -102,8 +105,10 @@ class ChangeNotifierDemoCard extends StatelessWidget {
       );
 }
 
+// ===== TAHAP 7 =====
 class WatchReadConsumerDemoCard extends StatelessWidget {
   const WatchReadConsumerDemoCard({super.key});
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
@@ -206,6 +211,7 @@ class WatchReadConsumerDemoCard extends StatelessWidget {
 
 class ConsumerOnlyCounterTile extends StatelessWidget {
   const ConsumerOnlyCounterTile({super.key});
+
   @override
   Widget build(BuildContext context) => Consumer<CourseProvider>(
         builder: (context, provider, child) => Container(
@@ -229,26 +235,35 @@ class ConsumerOnlyCounterTile extends StatelessWidget {
       );
 }
 
+// ===== FAVORITE SECTION — baca dari provider, tampilkan Course typed =====
 class FavoriteSectionCard extends StatelessWidget {
   const FavoriteSectionCard({super.key});
 
   @override
   Widget build(BuildContext context) => Consumer<CourseProvider>(
-        builder: (context, provider, _) =>
-            withCourses(handleStates: false, (_, courses) {
-          final favCourses = courses
+        builder: (context, provider, _) {
+          if (!provider.hasLoaded) {
+            return AppCard(
+              borderColor: AppColors.gold.withValues(alpha: 0.35),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          }
+          final favCourses = provider.courses
               .where((c) => provider.isFavorite(c.code))
               .toList();
           return AppCard(
-            borderColor: AppColors.success.withValues(alpha: 0.35),
+            borderColor: AppColors.gold.withValues(alpha: 0.4),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               cardHeader(
                 Icons.star,
-                'Course Favorite (Provider)',
+                'Course Favorite',
                 Text('${favCourses.length}',
-                    style:
-                        ts(13, w: FontWeight.bold, color: AppColors.success)),
+                    style: ts(13, w: FontWeight.bold, color: AppColors.gold)),
+                color: AppColors.gold,
               ),
               gap(10),
               if (favCourses.isEmpty)
@@ -257,18 +272,18 @@ class FavoriteSectionCard extends StatelessWidget {
                 for (final c in favCourses) _favItem(context, c),
             ]),
           );
-        }),
+        },
       );
 
-  Widget _favItem(BuildContext context, Json c) => Padding(
+  Widget _favItem(BuildContext context, Course c) => Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => go(context, CourseDetailPage(course: c)),
+          onTap: () => openCourse(context, c),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Row(children: [
-              const Icon(Icons.bookmark, size: 16, color: AppColors.success),
+              const Icon(Icons.bookmark, size: 16, color: AppColors.gold),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(c.title,
