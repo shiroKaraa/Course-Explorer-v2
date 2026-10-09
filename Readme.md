@@ -90,3 +90,171 @@ Saya menambahkan animasi fade-in dan slide-up pada elemen Home, animasi membesar
 
 Saya tetap menggunakan IndexedStack di MainShellPage supaya state setiap tab, seperti search query, tidak hilang saat berpindah tab. Animasi dibuat secukupnya agar aplikasi terasa lebih halus tanpa berlebihan.
 
+Tahap 14- G :
+
+# Course Explorer v2
+
+Aplikasi eksplorasi course yang dibangun sebagai **Mini Project Praktikum Pemrograman Mobile Pertemuan 6**. Menerapkan **State Management** dan **Mobile Application Architecture** bertingkat dengan pola Provider → Repository → Service.
+
+
+## 🏗️ Arsitektur
+
+Aplikasi menerapkan **separation of concerns** dengan lima layer:
+
+```
+   UI (Screens & Widgets)
+        │
+        ▼
+   Provider (CourseProvider)
+        │
+        ▼
+   Repository (CourseRepository)
+        │
+        ▼
+   Service (CourseService)
+        │
+        ▼
+   Data Source (JSON Asset)
+```
+
+
+## 📁 Struktur Folder
+
+```
+lib/
+├── main.dart                          # Entry point + wiring Provider
+├── quiz_data.dart                     # Data soal Mini Quiz
+│
+├── core/                              # Fondasi: konstanta & helper
+│   ├── app_colors.dart                # Palet warna (Undiksha + emas)
+│   ├── app_strings.dart               # Identitas & judul aplikasi
+│   ├── di.dart                        # Dependency Injection sederhana
+│   ├── legacy_globals.dart            # Legacy state (quizScore, courseFilter)
+│   └── ui_helpers.dart                # Helper UI (ts, gap, section, dll.)
+│
+├── models/                            # Model data
+│   └── course.dart                    # Class Course + fromJson
+│
+├── services/                          # Detail teknis data access
+│   └── course_service.dart            # Baca JSON, parse, return List<Course>
+│
+├── repositories/                      # Abstraksi sumber data
+│   └── course_repository.dart         # Interface + implementasi
+│
+├── providers/                         # State management
+│   └── course_provider.dart           # ChangeNotifier untuk courses & favorites
+│
+├── widgets/                           # Widget reusable
+│   ├── app_card.dart                  # Kartu umum
+│   ├── course_card.dart               # Kartu course (typed Course)
+│   ├── demo_scaffold.dart             # Scaffold standar
+│   ├── fade_in.dart                   # Animasi fade-in reusable
+│   ├── identity_card.dart             # Kartu identitas mahasiswa
+│   ├── info_card.dart                 # Kartu info (row-based)
+│   ├── mini_quiz_card.dart            # Kartu Mini Quiz
+│   ├── scroll_page.dart               # Wrapper untuk SingleChildScrollView
+│   └── status_helper.dart             # Helper status (warna, ikon, badge)
+│
+├── screens/                           # Halaman utama
+│   ├── main_shell_page.dart           # Shell dengan 4 tab responsif
+│   ├── home_tab_page.dart             # Tab Home
+│   ├── course_grid_page.dart          # Tab Courses (dengan search & filter)
+│   ├── favorites_page.dart            # Tab Favorites
+│   ├── profile_tab_page.dart          # Tab Profile
+│   ├── course_detail_page.dart        # Halaman detail course
+│   ├── demo_gallery_page.dart         # Gallery kartu demo Tahap 2–11
+│   ├── notes_gallery_page.dart        # Gallery catatan perbandingan
+│   └── about_page.dart                # Halaman tentang aplikasi
+│
+├── demos/                             # Kartu demo per tahap
+│   ├── tahap_2_3_demo.dart            # Prop drilling & lifting state
+│   ├── tahap_4_demo.dart              # ValueNotifier
+│   ├── tahap_5_6_7_demo.dart          # ChangeNotifier, Provider, watch/read/Consumer
+│   ├── tahap_8_demo.dart              # Model Course
+│   ├── tahap_9_demo.dart              # CourseService
+│   ├── tahap_10_demo.dart             # CourseRepository
+│   └── tahap_11_demo.dart             # Async State
+│
+└── notes/                             # Kartu catatan perbandingan
+    ├── state_classification_card.dart
+    ├── prop_drilling_note_card.dart
+    ├── lifting_state_up_note_card.dart
+    ├── value_notifier_comparison_card.dart
+    ├── change_notifier_comparison_card.dart
+    ├── provider_status_card.dart
+    ├── provider_patterns_comparison_card.dart
+    ├── course_model_comparison_card.dart
+    ├── course_service_comparison_card.dart
+    ├── course_repository_comparison_card.dart
+    └── async_state_comparison_card.dart
+```
+
+## 🚀 Cara Menjalankan
+
+### syarat
+
+- Flutter SDK **3.13.2** atau lebih baru.
+- Dart SDK **3.0.0** atau lebih baru.
+- Emulator Android / iOS / Chrome, atau device fisik.
+
+### Langkah
+
+1. **Clone repository:**
+   ```bash
+   git clone <https://github.com/shiroKaraa/Course-Explorer-v2/blob/main/lib/main.dart#L2967>
+   cd course_explorer_v2
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Jalankan aplikasi:**
+   ```bash
+   flutter run
+   ```
+
+### Build untuk Production
+
+```bash
+# Android APK
+flutter build apk --release
+
+# Web
+flutter build web --release
+
+# iOS (hanya di macOS)
+flutter build ios --release
+```
+
+## 🧪 Pengujian
+
+```bash
+# Analisis statis
+flutter analyze
+
+# Unit test (kalau ada)
+flutter test
+```
+
+
+## 👤 Author
+
+**I Kadek Dwi Bajaskara**  
+NIM: 2415051068  
+Kelas: PTI 5A  
+Program Studi Pendidikan Teknik Informatika  
+Universitas Pendidikan Ganesha
+
+CATATAN :
+Saya membuat README.md sebagai dokumentasi utama Course Explorer v2 yang berisi deskripsi aplikasi, identitas mahasiswa, fitur, arsitektur, struktur folder, cara menjalankan, riwayat Tahap 0–17, dan teknologi yang digunakan.
+
+Saya juga memeriksa .gitignore agar file sensitif dan build artifacts tidak ikut ter-commit, serta memastikan deskripsi di pubspec.yaml tetap singkat dan sesuai. Dokumentasi ini memudahkan dosen atau asisten memahami proyek sekaligus melihat perkembangan pembelajaran dari setiap tahap.
+
+Tahap 14-H :
+
+Saya menyelesaikan integrasi utama Course Explorer v2 dan membuat commit yang mencakup seluruh perubahan Tahap 14-A sampai 14-G. Perubahan meliputi migrasi ke model Course, penambahan halaman Demo Gallery, Notes Gallery, dan About, perombakan Home & Profile, fitur search, serta animasi halus.
+
+Fitur utama telah diperiksa melalui checklist, termasuk identity, favorites, search, filter, async state, dan navigasi. Tahap 14-H bukan akhir pengembangan, melainkan penutup tahap integrasi awal. Selanjutnya, proyek akan memasuki tahap Debugging untuk memperbaiki bug dan melakukan penyesuaian atau penambahan fitur jika diperlukan, sebelum melanjutkan ke Audit Architecture.
+
