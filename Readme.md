@@ -43,3 +43,7 @@ Saya membuat class Course di lib/models/course.dart untuk menampung data mata ku
 Tahap 9 : Service / Data Source
 
 Saya membuat CourseService untuk menangani pembacaan JSON, mulai dari rootBundle.loadString hingga mengubah data menjadi List<Course>. Saya juga menambahkan kartu demo di Home dengan tombol "Muat Ulang" serta perbandingan di Profile. Dari tahap ini, saya memahami bahwa service memisahkan proses pengambilan data dari UI, sehingga jika sumber data berubah menjadi REST API, penyesuaian cukup dilakukan di CourseService.
+
+Tahap 10 : Repository Pattern
+
+Saya membuat CourseRepository sebagai kontrak pengambilan data dan CourseRepositoryImpl sebagai implementasinya yang menggunakan CourseService melalui constructor injection. Saya juga menambahkan kartu demo di Home dan perbandingan service dengan repository di Profile. Dari tahap ini, saya memahami bahwa repository menjadi perantara yang memisahkan UI dari implementasi sumber data, sehingga lebih mudah diuji dan diganti, misalnya dari JSON asset ke HTTP API.
