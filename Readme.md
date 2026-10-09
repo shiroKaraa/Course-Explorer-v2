@@ -263,3 +263,35 @@ Tahap 14 (DEBUGING) :
 Pada tahap ini saya menyelesaikan Mini Project Integrasi Course Explorer v2 dengan menggabungkan layer yang telah dibangun dari Tahap 1–13. Semua screen utama kini mengambil data dari CourseProvider dan mengikuti alur Provider → Repository → Service → Data Source. Saya juga memigrasi CourseCard dan CourseDetailPage dari Json (Map) ke model Course bertipe jelas.
 
 Saya menambahkan penanganan kondisi loading, error, dan success, serta fitur search, kartu statistik, aksen emas, dan animasi halus. Selain itu, saya memperbaiki beberapa masalah UI, seperti judul AppBar ganda, penempatan AsyncCoursesCard, state tab yang ter-reset, dan duplikasi widget gallery. Dengan demikian, struktur dan tampilan aplikasi menjadi lebih konsisten serta siap memasuki tahap debugging dan audit arsitektur.
+
+Tahap 15 : DEBUGGING 
+
+Pada tahap ini saya melakukan empat studi kasus debugging terkait state management. Kasus A menunjukkan bahwa tanpa notifyListeners(), UI tidak diperbarui meskipun state provider berubah. Kasus B menghasilkan ProviderNotFoundException karena MyApp berada di atas ChangeNotifierProvider. Kasus C menunjukkan bahwa kegagalan memuat asset ditangani melalui error state dan tombol Coba Lagi. Kasus D menghasilkan error setState() called after dispose() karena setState() dipanggil setelah widget tidak aktif; solusinya adalah memeriksa mounted sebelum memperbarui state.
+
+Dari keempat kasus tersebut, saya memahami pentingnya memeriksa pemilik state, listener, pemanggilan notifyListeners(), posisi widget terhadap provider, dan siklus hidup widget.
+
+
+Tahap 16 : Audit Architecture dan Dependency Direction
+
+## Tanggung Jawab Setiap Folder
+
+Aplikasi ini menerapkan *separation of concerns* dengan pembagian tanggung jawab berikut:
+
+| Folder | Tanggung Jawab |
+|---|---|
+| `lib/models/` | Representasi data bertipe (`Course` + `fromJson`). |
+| `lib/services/` | Detail teknis data access (`rootBundle`, `jsonDecode`). |
+| `lib/repositories/` | Kontrak abstraksi sumber data (interface + implementasi). |
+| `lib/providers/` | State management + notifikasi (`ChangeNotifier`, `notifyListeners`). |
+| `lib/screens/` | Halaman utama + navigasi. |
+| `lib/widgets/` | Widget reusable (kartu, tombol, animasi). |
+| `lib/core/` | Konstanta, helper UI, dependency injection, legacy globals. |
+| `lib/demos/` | Kartu demo Tahap 2–11 untuk keperluan pembelajaran. |
+| `lib/notes/` | Kartu catatan perbandingan konsep. |
+| `lib/quiz_data.dart` | Data soal Mini Quiz. |
+
+**Arah dependency:**  
+`screens/` → `providers/` → `repositories/` → `services/` → `models/`
+
+Layer atas boleh mengimpor layer di bawahnya, tetapi **tidak sebaliknya**.  
+Aturan ini menjaga agar perubahan di satu layer tidak merembet ke layer lain, dan setiap layer dapat diuji secara terpisah.

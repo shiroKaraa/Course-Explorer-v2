@@ -14,6 +14,7 @@ import '../widgets/status_helper.dart';
 import '../demos/tahap_5_6_7_demo.dart';
 import 'course_detail_page.dart';
 import 'demo_gallery_page.dart';
+import 'package:course_explorer_v2/widgets/debug_mounted_demo.dart'; 
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -71,6 +72,9 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
           // 6. Mini quiz
           const MiniQuizCard(),
+          gap(12),
+
+          const DebugMountedDemo(),
         ],
       );
 }
