@@ -39,3 +39,7 @@ Saya mencoba context.watch, context.read, dan Consumer untuk mengakses CoursePro
 Tahap 8 : Membuat Model Course
 
 Saya membuat class Course di lib/models/course.dart untuk menampung data mata kuliah, lengkap dengan fromJson, toJson, serta getter seperti isDone dan progress. Saya juga menambahkan kartu demo di halaman Home dan perbandingan penggunaan Map dengan model di halaman Profile. Dengan model ini, tipe data lebih jelas dan parsing JSON tidak perlu dilakukan berulang kali di UI.
+
+Tahap 9 : Service / Data Source
+
+Saya membuat CourseService untuk menangani pembacaan JSON, mulai dari rootBundle.loadString hingga mengubah data menjadi List<Course>. Saya juga menambahkan kartu demo di Home dengan tombol "Muat Ulang" serta perbandingan di Profile. Dari tahap ini, saya memahami bahwa service memisahkan proses pengambilan data dari UI, sehingga jika sumber data berubah menjadi REST API, penyesuaian cukup dilakukan di CourseService.
