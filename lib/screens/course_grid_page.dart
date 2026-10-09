@@ -26,6 +26,13 @@ bool _matchesFilter(String filter, Course c, Set<String> favs) =>
       _ => true,
     };
 
+bool _matchesSearch(String query, Course c) {
+  final q = query.trim().toLowerCase();
+  if (q.isEmpty) return true;
+  return c.title.toLowerCase().contains(q) ||
+      c.code.toLowerCase().contains(q);
+}
+
 class CourseGridPage extends StatefulWidget {
   final bool standalone;
 
@@ -36,6 +43,9 @@ class CourseGridPage extends StatefulWidget {
 }
 
 class _CourseGridPageState extends State<CourseGridPage> {
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +56,21 @@ class _CourseGridPageState extends State<CourseGridPage> {
         provider.loadCourses();
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    setState(() => _searchQuery = value);
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() => _searchQuery = '');
   }
 
   @override
@@ -60,7 +85,16 @@ class _CourseGridPageState extends State<CourseGridPage> {
             subtitle: 'Pendidikan Teknik Informatika • Semester 5',
           ),
         ),
+
+        _SearchBar(
+          controller: _searchController,
+          query: _searchQuery,
+          onChanged: _onSearchChanged,
+          onClear: _clearSearch,
+        ),
+
         const _FilterBar(),
+
         Expanded(child: _body(context, provider)),
       ]),
     );
@@ -75,11 +109,19 @@ class _CourseGridPageState extends State<CourseGridPage> {
     }
 
     final favs = provider.favorites;
+
     final filtered = provider.courses
         .where((c) => _matchesFilter(courseFilter.value, c, favs))
+        .where((c) => _matchesSearch(_searchQuery, c))
         .toList();
 
-    if (filtered.isEmpty) return _emptyState();
+    if (filtered.isEmpty) {
+      return _emptyState(
+        query: _searchQuery,
+        filter: courseFilter.value,
+      );
+    }
+
     return _grid(context, filtered, provider);
   }
 
@@ -104,16 +146,33 @@ class _CourseGridPageState extends State<CourseGridPage> {
         ),
       );
 
-  Widget _emptyState() => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.filter_alt_off, size: 48, color: AppColors.muted),
-            gap(10),
-            hint('Tidak ada course dengan filter ini.'),
-          ]),
-        ),
-      );
+  Widget _emptyState({required String query, required String filter}) {
+    final isSearching = query.trim().isNotEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Icon(
+            isSearching ? Icons.search_off : Icons.filter_alt_off,
+            size: 48,
+            color: AppColors.muted,
+          ),
+          gap(10),
+          Text(
+            isSearching
+                ? 'Tidak ada course cocok dengan pencarian.'
+                : 'Tidak ada course dengan filter ini.',
+            style: ts(13, w: FontWeight.w600, color: Colors.black87),
+            textAlign: TextAlign.center,
+          ),
+          if (isSearching) ...[
+            gap(6),
+            hint('Kata kunci: "$query"'),
+          ],
+        ]),
+      ),
+    );
+  }
 
   Widget _grid(
     BuildContext context,
@@ -171,6 +230,64 @@ class _CourseGridPageState extends State<CourseGridPage> {
     provider.toggleFavorite(course.code);
     showMsg(context, 'Dihapus dari favorite.', color: Colors.red);
   }
+}
+
+class _SearchBar extends StatelessWidget {
+  final TextEditingController controller;
+  final String query;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  const _SearchBar({
+    required this.controller,
+    required this.query,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          textInputAction: TextInputAction.search,
+          style: ts(13, color: Colors.black87),
+          decoration: InputDecoration(
+            hintText: 'Cari course berdasarkan judul atau kode...',
+            hintStyle: ts(12, color: Colors.black45),
+            prefixIcon: const Icon(Icons.search,
+                color: AppColors.primary, size: 20),
+            suffixIcon: query.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(Icons.clear,
+                        color: AppColors.muted, size: 18),
+                    onPressed: onClear,
+                    tooltip: 'Bersihkan pencarian',
+                  )
+                : null,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: AppColors.border, width: 1),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: AppColors.border, width: 1),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide:
+                  BorderSide(color: AppColors.primary, width: 1.5),
+            ),
+          ),
+        ),
+      );
 }
 
 class _FilterBar extends StatelessWidget {

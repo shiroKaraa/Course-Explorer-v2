@@ -73,7 +73,25 @@ class _MainShellPageState extends State<MainShellPage> {
             ],
             Expanded(
               key: const ValueKey('content'),
-              child: IndexedStack(index: _index, children: _pages),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.02, 0),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(_index),
+                  child: _pages[_index],
+                ),
+              ),
             ),
           ]),
         );

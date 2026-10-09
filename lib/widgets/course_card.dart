@@ -25,11 +25,47 @@ class CourseCard extends StatefulWidget {
   State<CourseCard> createState() => _CourseCardState();
 }
 
-class _CourseCardState extends State<CourseCard> {
+class _CourseCardState extends State<CourseCard>
+    with SingleTickerProviderStateMixin {
   bool _showDescription = false;
+  late AnimationController _favAnimController;
+  late Animation<double> _favScale;
+
+  @override
+  void initState() {
+    super.initState();
+    _favAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _favScale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 1.35)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.35, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50,
+      ),
+    ]).animate(_favAnimController);
+  }
+
+  @override
+  void dispose() {
+    _favAnimController.dispose();
+    super.dispose();
+  }
 
   void _toggleDescription() =>
       setState(() => _showDescription = !_showDescription);
+
+  void _onFavoriteTapped() {
+    // Jalankan animasi scale singkat.
+    _favAnimController.forward(from: 0);
+    widget.onToggleFavorite?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +91,19 @@ class _CourseCardState extends State<CourseCard> {
           ),
           if (widget.onToggleFavorite != null)
             InkWell(
-              onTap: widget.onToggleFavorite,
+              onTap: _onFavoriteTapped,
               borderRadius: BorderRadius.circular(20),
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: Icon(
-                  widget.isFavorite ? Icons.star : Icons.star_border,
-                  color:
-                      widget.isFavorite ? AppColors.gold : AppColors.muted,
-                  size: 20,
+                child: ScaleTransition(
+                  scale: _favScale,
+                  child: Icon(
+                    widget.isFavorite ? Icons.star : Icons.star_border,
+                    color: widget.isFavorite
+                        ? AppColors.gold
+                        : AppColors.muted,
+                    size: 20,
+                  ),
                 ),
               ),
             )
@@ -74,15 +114,20 @@ class _CourseCardState extends State<CourseCard> {
         Text(course.summary, style: ts(11, color: Colors.black54)),
         gap(4),
         Expanded(
-          child: _showDescription
-              ? SingleChildScrollView(
-                  child: Text(course.description,
-                      style: ts(11, color: Colors.black87, height: 1.4)),
-                )
-              : Text(course.description,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: ts(11, color: Colors.black45, height: 1.3)),
+          child: AnimatedCrossFade(
+            duration: const Duration(milliseconds: 200),
+            crossFadeState: _showDescription
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: Text(course.description,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: ts(11, color: Colors.black45, height: 1.3)),
+            secondChild: SingleChildScrollView(
+              child: Text(course.description,
+                  style: ts(11, color: Colors.black87, height: 1.4)),
+            ),
+          ),
         ),
         Row(children: [
           Expanded(

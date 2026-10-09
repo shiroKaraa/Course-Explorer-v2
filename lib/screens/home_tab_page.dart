@@ -7,6 +7,7 @@ import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
+import '../widgets/fade_in.dart';
 import '../widgets/identity_card.dart';
 import '../widgets/mini_quiz_card.dart';
 import '../widgets/status_helper.dart';
@@ -39,21 +40,41 @@ class _HomeTabPageState extends State<HomeTabPage> {
   Widget build(BuildContext context) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
-
+      
           const IdentityCard(),
           gap(),
-          const _StatsCard(),
+
+         
+          const FadeIn(
+            delay: Duration(milliseconds: 120),
+            slideOffset: 10,
+            child: _StatsCard(),
+          ),
           gap(),
-          const _DemoButton(),
+
+          
+          const FadeIn(
+            delay: Duration(milliseconds: 220),
+            slideOffset: 10,
+            child: _DemoButton(),
+          ),
           gap(),
+
+          
           const AsyncCoursesCard(),
           gap(),
+
+         
           sectionTitle('Course Terbaru'),
           gap(8),
           const _RecentCourses(),
           gap(),
+
+        
           const FavoriteSectionCard(),
           gap(12),
+
+        
           const MiniQuizCard(),
         ],
       );
@@ -151,7 +172,7 @@ class _StatTile extends StatelessWidget {
       );
 }
 
-
+ 
 class _DemoButton extends StatelessWidget {
   const _DemoButton();
 
