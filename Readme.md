@@ -71,3 +71,12 @@ Menambahkan warna aksen emas (gold = #FFB300, goldSoft = #FFF4D6) ke AppColors s
 Tahap 14-B :
 
 Saya memigrasikan data dari Json ke model Course pada seluruh screen utama, sehingga field dapat diakses langsung tanpa cast manual. Saya juga memindahkan fungsi openCourse() dan confirmRemoveFavorite() ke file yang sesuai untuk menghindari circular import. Selain itu, aksen favorite diubah menjadi warna emas agar sesuai dengan tema Undiksha, dan screen utama kini mengambil data langsung dari CourseProvider.
+
+Tahap 14-C :
+
+Saya membuat tiga halaman baru, yaitu DemoGalleryPage, NotesGalleryPage, dan AboutPage untuk memisahkan demo, catatan, dan informasi aplikasi. Saya juga memindahkan empat kartu perbandingan ke folder notes/ agar struktur kode lebih terorganisir. Perubahan ini hanya berfokus pada penambahan halaman dan perapian struktur tanpa mengubah perilaku aplikasi.
+
+Tahap 14-D :
+
+Saya merombak halaman Home dan Profile agar lebih rapi dan berfokus pada fitur utama. Home kini menampilkan identitas mahasiswa, statistik course, SKS dan favorite, course terbaru, AsyncCoursesCard, serta MiniQuiz. Sementara itu, Profile berisi informasi mahasiswa, statistik, dan daftar favorite. Kartu demo dan catatan tahapan dipindahkan ke halaman terpisah agar tidak menumpuk. Saya juga menerapkan aksen emas yang dipadukan dengan warna biru dan hijau sesuai tema Undiksha.
+
