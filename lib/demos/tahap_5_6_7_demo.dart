@@ -6,15 +6,13 @@ import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
+import '../screens/course_detail_page.dart';
 
-// ===== TAHAP 6 =====
 class ChangeNotifierDemoCard extends StatelessWidget {
   const ChangeNotifierDemoCard({super.key});
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
-
     return AppCard(
       padding: const EdgeInsets.all(16),
       borderColor: AppColors.primary.withValues(alpha: 0.5),
@@ -104,14 +102,11 @@ class ChangeNotifierDemoCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 7 =====
 class WatchReadConsumerDemoCard extends StatelessWidget {
   const WatchReadConsumerDemoCard({super.key});
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
-
     return AppCard(
       padding: const EdgeInsets.all(16),
       borderColor: AppColors.success.withValues(alpha: 0.5),
@@ -211,7 +206,6 @@ class WatchReadConsumerDemoCard extends StatelessWidget {
 
 class ConsumerOnlyCounterTile extends StatelessWidget {
   const ConsumerOnlyCounterTile({super.key});
-
   @override
   Widget build(BuildContext context) => Consumer<CourseProvider>(
         builder: (context, provider, child) => Container(
@@ -235,31 +229,30 @@ class ConsumerOnlyCounterTile extends StatelessWidget {
       );
 }
 
-// ===== FAVORITE SECTION (dulu di main.dart) =====
 class FavoriteSectionCard extends StatelessWidget {
   const FavoriteSectionCard({super.key});
 
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<Set<String>>(
-        valueListenable: favorites,
-        builder: (context, favs, _) =>
+  Widget build(BuildContext context) => Consumer<CourseProvider>(
+        builder: (context, provider, _) =>
             withCourses(handleStates: false, (_, courses) {
-          final favCourses =
-              courses.where((c) => favs.contains(c.code)).toList();
+          final favCourses = courses
+              .where((c) => provider.isFavorite(c.code))
+              .toList();
           return AppCard(
             borderColor: AppColors.success.withValues(alpha: 0.35),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               cardHeader(
                 Icons.star,
-                'Course Favorite (ValueNotifier)',
+                'Course Favorite (Provider)',
                 Text('${favCourses.length}',
                     style:
                         ts(13, w: FontWeight.bold, color: AppColors.success)),
               ),
               gap(10),
               if (favCourses.isEmpty)
-                hint('Belum ada course favorite. Tap ikon ⭐ di halaman detail course.')
+                hint('Belum ada course favorite. Tap ikon ⭐ di kartu course atau di halaman detail.')
               else
                 for (final c in favCourses) _favItem(context, c),
             ]),
@@ -271,7 +264,7 @@ class FavoriteSectionCard extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 6),
         child: InkWell(
           borderRadius: BorderRadius.circular(8),
-          onTap: () => openCourse(context, c),
+          onTap: () => go(context, CourseDetailPage(course: c)),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
             child: Row(children: [

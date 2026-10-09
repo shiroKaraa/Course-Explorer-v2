@@ -3,6 +3,7 @@ import '../core/app_colors.dart';
 import '../widgets/demo_scaffold.dart';
 import 'home_tab_page.dart';
 import 'course_grid_page.dart';
+import 'favorites_page.dart';
 import 'profile_tab_page.dart';
 
 class MainShellPage extends StatefulWidget {
@@ -18,12 +19,14 @@ class _MainShellPageState extends State<MainShellPage> {
   static const _pages = <Widget>[
     HomeTabPage(),
     CourseGridPage(),
+    FavoritesPage(),
     ProfileTabPage(),
   ];
 
   static const _dest = <(IconData, IconData, String)>[
     (Icons.home_outlined, Icons.home, 'Home'),
     (Icons.school_outlined, Icons.school, 'Courses'),
+    (Icons.star_border, Icons.star, 'Favorites'),
     (Icons.person_outline, Icons.person, 'Profile'),
   ];
 

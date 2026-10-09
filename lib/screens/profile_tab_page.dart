@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../core/app_colors.dart';
-import '../core/app_strings.dart';           
+import '../core/app_strings.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/identity_card.dart';
 import '../widgets/info_card.dart';
@@ -18,78 +21,77 @@ import '../demos/tahap_8_demo.dart';
 import '../demos/tahap_9_demo.dart';
 import '../demos/tahap_10_demo.dart';
 import '../demos/tahap_11_demo.dart';
-import '../demos/tahap_5_6_7_demo.dart';        
+import '../demos/tahap_5_6_7_demo.dart';
 
 class ProfileTabPage extends StatelessWidget {
   const ProfileTabPage({super.key});
 
   @override
-  Widget build(BuildContext context) => ScrollPage([
-        const IdentityCard(
-            subtitle: 'Pendidikan Teknik Informatika • Semester 5'),
-        gap(),
-        ListenableBuilder(
-          listenable: Listenable.merge([favorites, quizScore]),
-          builder: (_, __) => Row(children: [
-            const _StatTile(Icons.book_outlined, 'Topik', '5'),
-            const SizedBox(width: 10),
-            _StatTile(Icons.star_outline, 'Favorite',
-                '${favorites.value.length}',
-                color: AppColors.success),
-            const SizedBox(width: 10),
-            _StatTile(Icons.emoji_events_outlined, 'Quiz',
-                quizScore.value?.toString() ?? '-',
-                color: AppColors.warn),
-          ]),
+  Widget build(BuildContext context) {
+    final provider = context.watch<CourseProvider>();
+    return ScrollPage([
+      const IdentityCard(
+          subtitle: 'Pendidikan Teknik Informatika • Semester 5'),
+      gap(),
+      Row(children: [
+        const _StatTile(Icons.book_outlined, 'Topik', '5'),
+        const SizedBox(width: 10),
+        _StatTile(Icons.star_outline, 'Favorite', '${provider.favoriteCount}',
+            color: AppColors.success),
+        const SizedBox(width: 10),
+        _StatTile(Icons.emoji_events_outlined, 'Quiz',
+            quizScore.value?.toString() ?? '-',
+            color: AppColors.warn),
+      ]),
+      gap(),
+      const StateClassificationCard(),
+      gap(),
+      const AsyncStateIndicatorCard(),
+      gap(),
+      const ProviderStatusCard(),
+      gap(),
+      const ProviderPatternsComparisonCard(),
+      gap(),
+      const AsyncStateComparisonCard(),
+      gap(),
+      const CourseRepositoryComparisonCard(),
+      gap(),
+      const CourseServiceComparisonCard(),
+      gap(),
+      const CourseModelComparisonCard(),
+      gap(),
+      const PropDrillingNoteCard(),
+      gap(),
+      const LiftingStateUpNoteCard(),
+      gap(),
+      const ValueNotifierComparisonCard(),
+      gap(),
+      const ChangeNotifierComparisonCard(),
+      gap(),
+      ...section(
+        'Informasi Mahasiswa',
+        const InfoCard([
+          InfoRow(Icons.person_outline, 'Nama', studentName),
+          InfoRow(Icons.badge_outlined, 'NIM', studentId),
+          InfoRow(Icons.school_outlined, 'Program Studi',
+              'Pendidikan Teknik Informatika'),
+          InfoRow(Icons.calendar_today_outlined, 'Semester', '5'),
+        ], padding: EdgeInsets.all(16)),
+      ),
+      ...section(
+        'About Me',
+        AppCard(child: hint('Mahasiswa Pendidikan Teknik Informatika')),
+      ),
+      ...section(
+        'About Application',
+        AppCard(
+          borderColor: AppColors.primary.withValues(alpha: 0.3),
+          child: hint('Course Explorer v2'),
         ),
-        gap(),
-        const StateClassificationCard(),
-        gap(),
-        const AsyncStateIndicatorCard(),
-        gap(),
-        const ProviderStatusCard(),
-        gap(),
-        const ProviderPatternsComparisonCard(),
-        gap(),
-        const AsyncStateComparisonCard(),
-        gap(),
-        const CourseRepositoryComparisonCard(),
-        gap(),
-        const CourseServiceComparisonCard(),
-        gap(),
-        const CourseModelComparisonCard(),
-        gap(),
-        const PropDrillingNoteCard(),
-        gap(),
-        const LiftingStateUpNoteCard(),
-        gap(),
-        const ValueNotifierComparisonCard(),
-        gap(),
-        const ChangeNotifierComparisonCard(),
-        gap(),
-        ...section(
-          'Informasi Mahasiswa',
-          const InfoCard([
-            InfoRow(Icons.person_outline, 'Nama', studentName),
-            InfoRow(Icons.badge_outlined, 'NIM', studentId),
-            InfoRow(Icons.school_outlined, 'Program Studi',
-                'Pendidikan Teknik Informatika'),
-            InfoRow(Icons.calendar_today_outlined, 'Semester', '5'),
-          ], padding: EdgeInsets.all(16)),
-        ),
-        ...section(
-          'About Me',
-          AppCard(child: hint('Mahasiswa Pendidikan Teknik Informatika')),
-        ),
-        ...section(
-          'About Application',
-          AppCard(
-            borderColor: AppColors.primary.withValues(alpha: 0.3),
-            child: hint('Course Explorer v2'),
-          ),
-        ),
-        ...section('Daftar Favorite', const FavoriteSectionCard()),
-      ]);
+      ),
+      ...section('Daftar Favorite', const FavoriteSectionCard()),
+    ]);
+  }
 }
 
 class _StatTile extends StatelessWidget {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'course_detail_page.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
 import '../widgets/app_card.dart';
@@ -66,7 +67,7 @@ class _RecentCourses extends StatelessWidget {
                   title: Text(c.title),
                   subtitle: Text('${c.str('code')} • ${c.str('credits')} SKS'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => openCourse(context, c),
+                  onTap: () => go(context, CourseDetailPage(course: c)),
                 ),
               ),
             ),

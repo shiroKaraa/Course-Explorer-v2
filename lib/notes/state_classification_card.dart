@@ -32,10 +32,10 @@ class StateClassificationCard extends StatelessWidget {
       'setState()',
     ),
     (
-      'Favorites (Set<String>) — ValueNotifier',
+      'Favorites (Set<String>) — CourseProvider',
       'Shared',
-      'Dipakai di Home, Courses, Profile, dan Detail.',
-      'ValueNotifier',
+      'Dipakai di Courses, Favorites, Profile, Detail, dan Demo. Single source of truth.',
+      'ChangeNotifier',
     ),
     (
       'Quiz score & course filter',
@@ -54,12 +54,6 @@ class StateClassificationCard extends StatelessWidget {
       'Shared',
       'Pola listener sederhana (Tahap 4).',
       'ValueNotifier',
-    ),
-    (
-      'CourseProvider.favorites',
-      'Shared',
-      'ChangeNotifier yang menyimpan Set<String> + method toggleFavorite().',
-      'ChangeNotifier',
     ),
     (
       'Provider terpasang di widget tree',
