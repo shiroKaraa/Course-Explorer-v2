@@ -37,9 +37,9 @@ final favorites = ValueNotifier<Set<String>>(<String>{});
 final quizScore = ValueNotifier<int?>(null);
 final courseFilter = ValueNotifier<String>('all');
 final favoriteCounter = ValueNotifier<int>(0);
-final courseProvider = CourseProvider();
 final courseService = CourseService();
 final courseRepository = CourseRepositoryImpl(courseService);
+
 
 extension CourseX on Json {
   String str(String k, [String d = '-']) => this[k]?.toString() ?? d;
@@ -601,12 +601,17 @@ class StateClassificationCard extends StatelessWidget {
       'Membaca asset JSON dan mengembalikan List<Course>.',
       'rootBundle + Course.fromJson',
     ),
-    // BARU Tahap 10
     (
       'CourseRepository',
       'Abstraksi data',
-      'Kontrak + implementasi yang membungkus CourseService. Provider tahu kontrak, bukan implementasi.',
+      'Kontrak + implementasi yang membungkus CourseService.',
       'abstract + impl',
+    ),
+    (
+      'courses, isLoading, error di CourseProvider',
+      'Async state',
+      'Satu state holder untuk loading, error, dan data. UI menampilkan ketiganya berdasarkan state.',
+      'ChangeNotifier + notifyListeners',
     ),
   ];
 
@@ -616,6 +621,7 @@ class StateClassificationCard extends StatelessWidget {
     if (kind.startsWith('Representasi')) return AppColors.warn;
     if (kind.startsWith('Data access')) return AppColors.muted;
     if (kind.startsWith('Abstraksi')) return AppColors.success;
+    if (kind.startsWith('Async')) return AppColors.primary;
     if (kind.contains('SSOT')) return AppColors.warn;
     return AppColors.primary;
   }
@@ -721,7 +727,6 @@ class ProviderStatusCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 8: MODEL COURSE DEMO =====
 class CourseModelDemoCard extends StatelessWidget {
   const CourseModelDemoCard({super.key});
 
@@ -818,7 +823,6 @@ class CourseModelDemoCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 9: COURSE SERVICE DEMO =====
 class CourseServiceDemoCard extends StatefulWidget {
   const CourseServiceDemoCard({super.key});
 
@@ -960,10 +964,6 @@ class _CourseServiceDemoCardState extends State<CourseServiceDemoCard> {
       );
 }
 
-// ===== TAHAP 10: COURSE REPOSITORY DEMO =====
-// Kartu ini memanggil courseRepository.getCourses() dan menerima
-// List<Course>. UI tidak tahu bahwa di baliknya ada CourseService,
-// apalagi asset JSON. Kontrak yang dipakai adalah CourseRepository.
 class CourseRepositoryDemoCard extends StatefulWidget {
   const CourseRepositoryDemoCard({super.key});
 
@@ -1105,7 +1105,297 @@ class _CourseRepositoryDemoCardState extends State<CourseRepositoryDemoCard> {
       );
 }
 
-// ===== TAHAP 10: PERBANDINGAN SERVICE vs REPOSITORY =====
+class AsyncCoursesCard extends StatefulWidget {
+  const AsyncCoursesCard({super.key});
+
+  @override
+  State<AsyncCoursesCard> createState() => _AsyncCoursesCardState();
+}
+
+class _AsyncCoursesCardState extends State<AsyncCoursesCard> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<CourseProvider>();
+      if (!provider.hasLoaded && !provider.isLoading) {
+        provider.loadCourses();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<CourseProvider>();
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.primary.withValues(alpha: 0.6),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        cardHeader(
+          Icons.sync_problem_outlined,
+          'Provider Async State',
+          Text('Tahap 11', style: ts(12, color: Colors.black54)),
+          color: AppColors.primary,
+        ),
+        gap(10),
+        hint(
+            'Provider mengelola isLoading, error, dan courses. UI menampilkan tiga kondisi tanpa FutureBuilder.'),
+        gap(12),
+        _body(provider),
+        gap(10),
+        Row(children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: provider.isLoading
+                  ? null
+                  : () {
+                      context.read<CourseProvider>().refresh();
+                    },
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Refresh (via provider)'),
+              style: outlined(AppColors.primary, pad: 10),
+            ),
+          ),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _body(CourseProvider provider) {
+    if (provider.isLoading) {
+      return _loadingTile();
+    }
+    if (provider.error != null) {
+      return _errorTile(provider.error!);
+    }
+    if (!provider.hasLoaded) {
+      return _initialTile();
+    }
+    return _successTile(provider.courses);
+  }
+
+  Widget _initialTile() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.bg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(children: [
+          const Icon(Icons.hourglass_empty, size: 18, color: AppColors.muted),
+          const SizedBox(width: 10),
+          Text('Initial: belum ada data dimuat.',
+              style: ts(12, color: Colors.black87)),
+        ]),
+      );
+
+  Widget _loadingTile() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: Row(children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 10),
+          Text('Loading: memuat data dari provider...',
+              style: ts(12, color: Colors.black87)),
+        ]),
+      );
+
+  Widget _errorTile(String message) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.errorSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.35)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.error_outline, size: 18, color: Colors.red),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text('Error dari provider',
+                  style: ts(12, w: FontWeight.bold, color: Colors.red.shade700)),
+            ),
+          ]),
+          gap(6),
+          Text(message, style: ts(11, color: Colors.red.shade700)),
+        ]),
+      );
+
+  Widget _successTile(List<Course> courses) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.successSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.check_circle, size: 18, color: AppColors.success),
+            const SizedBox(width: 8),
+            Text('Success: ${courses.length} course',
+                style: ts(12, w: FontWeight.bold, color: AppColors.success)),
+            const Spacer(),
+            hint('via provider'),
+          ]),
+          gap(10),
+          for (final c in courses.take(3))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(children: [
+                const Icon(Icons.school_outlined,
+                    size: 14, color: AppColors.success),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text('${c.code} — ${c.title} '
+                      '(${c.credits} SKS)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ts(11, color: Colors.black87)),
+                ),
+              ]),
+            ),
+        ]),
+      );
+}
+
+class AsyncStateIndicatorCard extends StatelessWidget {
+  const AsyncStateIndicatorCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<CourseProvider>(
+      builder: (context, provider, child) {
+        final label = provider.asyncStateLabel;
+        final color = _colorFor(label);
+        final icon = _iconFor(label);
+        return AppCard(
+          borderColor: color.withValues(alpha: 0.5),
+          child: Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(children: [
+                Icon(icon, size: 12, color: color),
+                const SizedBox(width: 6),
+                Text(label.toUpperCase(),
+                    style: ts(10, w: FontWeight.bold, color: color)),
+              ]),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _descriptionFor(label),
+                style: ts(12, color: Colors.black87),
+              ),
+            ),
+            hint('Tahap 11'),
+          ]),
+        );
+      },
+    );
+  }
+
+  Color _colorFor(String label) {
+    switch (label) {
+      case 'loading':
+        return AppColors.primary;
+      case 'success':
+        return AppColors.success;
+      case 'error':
+        return Colors.red.shade700;
+      default:
+        return AppColors.muted;
+    }
+  }
+
+  IconData _iconFor(String label) {
+    switch (label) {
+      case 'loading':
+        return Icons.hourglass_top;
+      case 'success':
+        return Icons.check_circle;
+      case 'error':
+        return Icons.error_outline;
+      default:
+        return Icons.circle_outlined;
+    }
+  }
+
+  String _descriptionFor(String label) {
+    switch (label) {
+      case 'loading':
+        return 'Provider sedang memuat data dari repository.';
+      case 'success':
+        return 'Data course berhasil dimuat dan siap ditampilkan.';
+      case 'error':
+        return 'Terjadi error saat memuat data. Coba Refresh.';
+      default:
+        return 'Belum ada pemuatan data. Panggil loadCourses().';
+    }
+  }
+}
+
+class AsyncStateComparisonCard extends StatelessWidget {
+  const AsyncStateComparisonCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.primary.withValues(alpha: 0.5),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.sync_problem_outlined,
+            'FutureBuilder vs Provider Async State',
+            Text('Tahap 11', style: ts(12, color: Colors.black54)),
+            color: AppColors.primary,
+          ),
+          gap(10),
+          _row('Pengelola state', 'FutureBuilder (di widget)',
+              'CourseProvider (di luar widget)'),
+          _row('Kapan load dipanggil', 'Setiap build bisa trigger',
+              'Sekali di initState / refresh()'),
+          _row('Loading', 'connectionState.waiting', 'isLoading == true'),
+          _row('Error', 'snapshot.hasError', 'error != null'),
+          _row('Success', 'snapshot.data', 'courses.isNotEmpty / hasLoaded'),
+          _row('Retry', 'Bikin Future baru', 'provider.refresh()'),
+          _row('Dipakai lintas screen', 'Sulit (perlu widget sendiri)',
+              'Ya (watch provider)'),
+          gap(6),
+          hint(
+              'Kesimpulan: provider memusatkan async state sehingga loading/error/success dikelola sekali, bisa di-retry, dan bisa diakses lintas screen.'),
+        ]),
+      );
+
+  Widget _row(String label, String before, String after) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: ts(11, w: FontWeight.bold, color: Colors.black87)),
+          const SizedBox(height: 2),
+          Row(children: [
+            Expanded(
+              child: Text('FutureBuilder: $before',
+                  style: ts(11, color: AppColors.warn, height: 1.3)),
+            ),
+            Expanded(
+              child: Text('Provider: $after',
+                  style: ts(11, color: AppColors.success, height: 1.3)),
+            ),
+          ]),
+        ]),
+      );
+}
+
 class CourseRepositoryComparisonCard extends StatelessWidget {
   const CourseRepositoryComparisonCard({super.key});
 
@@ -1150,7 +1440,6 @@ class CourseRepositoryComparisonCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 8: PERBANDINGAN MAP vs MODEL =====
 class CourseModelComparisonCard extends StatelessWidget {
   const CourseModelComparisonCard({super.key});
 
@@ -1169,11 +1458,13 @@ class CourseModelComparisonCard extends StatelessWidget {
           _row('Akses field', "course['title']", 'course.title'),
           _row('Keamanan tipe', 'Runtime (bisa salah ketik)', 'Compile-time'),
           _row('Parsing', 'Manual di UI', 'Course.fromJson()'),
-          _row('Helper/logic', 'Sulit (tersebar)', 'Di dalam class (isDone, progress)'),
-          _row('Refactor aman', 'Rentan typo key', 'Rename field terbantu IDE'),
+          _row('Helper/logic', 'Sulit (tersebar)',
+              'Di dalam class (isDone, progress)'),
+          _row('Refactor aman', 'Rentan typo key',
+              'Rename field terbantu IDE'),
           gap(6),
           hint(
-              'Kesimpulan: model memindahkan representasi data dari Map longgar ke object bertipe. UI menjadi lebih aman dan mudah dibaca.'),
+              'Kesimpulan: model memindahkan representasi data dari Map longgar ke object bertipe.'),
         ]),
       );
 
@@ -1196,7 +1487,6 @@ class CourseModelComparisonCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 9: PERBANDINGAN SEBELUM/SESUDAH SERVICE =====
 class CourseServiceComparisonCard extends StatelessWidget {
   const CourseServiceComparisonCard({super.key});
 
@@ -1217,15 +1507,14 @@ class CourseServiceComparisonCard extends StatelessWidget {
               'Tidak, di service'),
           _row('Casting ke Map/List?', 'Ya, di main.dart',
               'Tidak, dari service'),
-          _row('Return type', 'Future<Json>',
-              'Future<List<Course>>'),
+          _row('Return type', 'Future<Json>', 'Future<List<Course>>'),
           _row('Ganti sumber data', 'Ubah di main.dart',
               'Ubah di service saja'),
           _row('Test service', 'Tidak bisa lepas dari widget',
               'Bisa, murni Dart + asset'),
           gap(6),
           hint(
-              'Kesimpulan: service memisahkan detail teknis data access dari UI. UI hanya butuh List<Course>, tanpa tahu dari mana asalnya.'),
+              'Kesimpulan: service memisahkan detail teknis data access dari UI.'),
         ]),
       );
 
@@ -1248,7 +1537,6 @@ class CourseServiceComparisonCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 3 =====
 class HomeDashboardPageV3 extends StatefulWidget {
   const HomeDashboardPageV3({super.key});
 
@@ -1410,8 +1698,6 @@ class DashboardStatusBarV3 extends StatelessWidget {
         ]),
       );
 }
-
-// ===== TAHAP 4 =====
 class HomeDashboardPageV4 extends StatelessWidget {
   const HomeDashboardPageV4({super.key});
 
@@ -1560,8 +1846,6 @@ class DashboardStatusBarV4 extends StatelessWidget {
         ]),
       );
 }
-
-// ===== TAHAP 6 =====
 class ChangeNotifierDemoCard extends StatelessWidget {
   const ChangeNotifierDemoCard({super.key});
 
@@ -1657,8 +1941,6 @@ class ChangeNotifierDemoCard extends StatelessWidget {
         ]),
       );
 }
-
-// ===== TAHAP 7 =====
 class WatchReadConsumerDemoCard extends StatelessWidget {
   const WatchReadConsumerDemoCard({super.key});
 
@@ -1875,11 +2157,14 @@ class ValueNotifierComparisonCard extends StatelessWidget {
             color: AppColors.primary,
           ),
           gap(10),
-          _row('Pemilik state', 'Widget (State class)', 'ValueNotifier global'),
-          _row('Child menerima nilai lewat', 'Constructor', 'Reference notifier'),
+          _row('Pemilik state', 'Widget (State class)',
+              'ValueNotifier global'),
+          _row('Child menerima nilai lewat', 'Constructor',
+              'Reference notifier'),
           _row('Child mengubah nilai lewat', 'Callback parent',
               'notifier.value = ...'),
-          _row('Rebuild dipicu oleh', 'setState()', 'notifier.value berubah'),
+          _row('Rebuild dipicu oleh', 'setState()',
+              'notifier.value berubah'),
           _row('Cakupan rebuild', 'Seluruh subtree parent',
               'Hanya ValueListenableBuilder'),
         ]),
@@ -1921,7 +2206,8 @@ class ChangeNotifierComparisonCard extends StatelessWidget {
           _row('Method sendiri', 'Tidak bisa', 'Bisa (toggleFavorite)'),
           _row('Notifikasi', 'notifier.value = ...', 'notifyListeners()'),
           _row('Logika terkait', 'Di luar class', 'Di dalam class'),
-          _row('Cocok untuk', 'Satu nilai sederhana', 'State gabungan + logika'),
+          _row('Cocok untuk', 'Satu nilai sederhana',
+              'State gabungan + logika'),
         ]),
       );
 
@@ -2145,6 +2431,8 @@ class _HomeTabPage extends StatelessWidget {
         children: [
           const IdentityCard(),
           gap(),
+          const AsyncCoursesCard(),
+          gap(),
           const CourseRepositoryDemoCard(),
           gap(),
           const CourseServiceDemoCard(),
@@ -2231,7 +2519,8 @@ class _ProfileTabPage extends StatelessWidget {
           builder: (_, __) => Row(children: [
             const _StatTile(Icons.book_outlined, 'Topik', '5'),
             const SizedBox(width: 10),
-            _StatTile(Icons.star_outline, 'Favorite', '${favorites.value.length}',
+            _StatTile(Icons.star_outline, 'Favorite',
+                '${favorites.value.length}',
                 color: AppColors.success),
             const SizedBox(width: 10),
             _StatTile(Icons.emoji_events_outlined, 'Quiz',
@@ -2242,11 +2531,14 @@ class _ProfileTabPage extends StatelessWidget {
         gap(),
         const StateClassificationCard(),
         gap(),
+        const AsyncStateIndicatorCard(),
+        gap(),
         const ProviderStatusCard(),
         gap(),
         const ProviderPatternsComparisonCard(),
         gap(),
-        // BARU Tahap 10: perbandingan service vs repository.
+        const AsyncStateComparisonCard(),
+        gap(),
         const CourseRepositoryComparisonCard(),
         gap(),
         const CourseServiceComparisonCard(),
@@ -2646,8 +2938,9 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) => ChangeNotifierProvider<CourseProvider>(
-        create: (_) => CourseProvider(),
+  Widget build(BuildContext context) =>
+      ChangeNotifierProvider<CourseProvider>(
+        create: (_) => CourseProvider(courseRepository),
         child: const MaterialAppShell(),
       );
 }
