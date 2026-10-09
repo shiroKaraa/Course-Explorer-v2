@@ -47,3 +47,7 @@ Saya membuat CourseService untuk menangani pembacaan JSON, mulai dari rootBundle
 Tahap 10 : Repository Pattern
 
 Saya membuat CourseRepository sebagai kontrak pengambilan data dan CourseRepositoryImpl sebagai implementasinya yang menggunakan CourseService melalui constructor injection. Saya juga menambahkan kartu demo di Home dan perbandingan service dengan repository di Profile. Dari tahap ini, saya memahami bahwa repository menjadi perantara yang memisahkan UI dari implementasi sumber data, sehingga lebih mudah diuji dan diganti, misalnya dari JSON asset ke HTTP API.
+
+Tahap 11 : Provider untuk Async State
+
+Saya mengembangkan CourseProvider untuk mengelola data course, status loading, dan error menggunakan CourseRepository. Method loadCourses() mengatur proses pemuatan data dan memperbarui UI melalui notifyListeners(). Saya juga menambahkan kartu demo di Home untuk menampilkan loading, data, atau pesan error dengan tombol Retry. Dari tahap ini, saya memahami bahwa async state dapat dikelola secara terpusat dan digunakan di beberapa halaman tanpa perlu membuat FutureBuilder terpisah.
