@@ -35,3 +35,7 @@ Provider diletakkan di atas MaterialApp agar bisa diakses oleh semua halaman, te
 Tahap 7 : context.watch(), context.read(), dan Consumer
 
 Saya mencoba context.watch, context.read, dan Consumer untuk mengakses CourseProvider. Dari percobaan ini, saya memahami bahwa watch memperbarui widget saat state berubah, read digunakan untuk memanggil method tanpa listen, sedangkan Consumer membatasi rebuild pada bagian widget tertentu. Saya juga mengamati melalui DevTools bahwa widget yang menggunakan read tidak ikut rebuild ketika favorite berubah.
+
+Tahap 8 : Membuat Model Course
+
+Saya membuat class Course di lib/models/course.dart untuk menampung data mata kuliah, lengkap dengan fromJson, toJson, serta getter seperti isDone dan progress. Saya juga menambahkan kartu demo di halaman Home dan perbandingan penggunaan Map dengan model di halaman Profile. Dengan model ini, tipe data lebih jelas dan parsing JSON tidak perlu dilakukan berulang kali di UI.
