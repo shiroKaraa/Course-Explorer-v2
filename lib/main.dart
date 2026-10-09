@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle, Clipboard, ClipboardData;
+import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'quiz_data.dart';
 
@@ -28,7 +29,7 @@ final Future<Json> studentDataFuture = rootBundle
     .loadString('assets/data/student_data.json')
     .then((s) => jsonDecode(s) as Json);
 
-// ===== SHARED STATE LAMA (masih dipakai widget yang belum dimigrasi) =====
+// ===== SHARED STATE  =====
 final favorites = ValueNotifier<Set<String>>(<String>{});
 final quizScore = ValueNotifier<int?>(null);
 final courseFilter = ValueNotifier<String>('all');
@@ -102,11 +103,11 @@ Widget cardHeader(IconData icon, String title, Widget trailing,
     Row(children: [
       Icon(icon, color: color, size: iconSize),
       const SizedBox(width: 8),
-      Expanded(                          // ← tambahkan ini
+      Expanded(
         child: Text(
           title,
           style: ts(15, w: FontWeight.bold, color: color),
-          overflow: TextOverflow.ellipsis, // ← opsional, biar rapi
+          overflow: TextOverflow.ellipsis,
           maxLines: 1,
         ),
       ),
@@ -524,7 +525,7 @@ class StateClassificationCard extends StatelessWidget {
       'setState()',
     ),
     (
-      'Progress MiniQuiz (_index, _score, _selected, _finished)',
+      'Progress MiniQuiz',
       'Local',
       'Hanya relevan selama user mengerjakan quiz.',
       'setState()',
@@ -542,7 +543,7 @@ class StateClassificationCard extends StatelessWidget {
       'setState()',
     ),
     (
-      'Favorites (Set<String>) — versi ValueNotifier',
+      'Favorites (Set<String>) — ValueNotifier',
       'Shared',
       'Dipakai di Home, Courses, Profile, dan Detail.',
       'ValueNotifier',
@@ -568,14 +569,23 @@ class StateClassificationCard extends StatelessWidget {
     (
       'CourseProvider.favorites',
       'Shared',
-      'Satu class ChangeNotifier yang menyimpan Set<String> + method toggleFavorite().',
+      'ChangeNotifier yang menyimpan Set<String> + method toggleFavorite().',
       'ChangeNotifier',
+    ),
+    (
+      'Provider terpasang di widget tree',
+      'Infrastruktur',
+      'ChangeNotifierProvider membungkus MaterialApp; CourseProvider bisa diakses lewat context.read/watch.',
+      'provider',
     ),
   ];
 
-  Color _colorFor(String kind) => kind.startsWith('Shared')
-      ? AppColors.success
-      : (kind.contains('SSOT') ? AppColors.warn : AppColors.primary);
+  Color _colorFor(String kind) {
+    if (kind.startsWith('Shared')) return AppColors.success;
+    if (kind.startsWith('Infrastruktur')) return AppColors.primary;
+    if (kind.contains('SSOT')) return AppColors.warn;
+    return AppColors.primary;
+  }
 
   @override
   Widget build(BuildContext context) => AppCard(
@@ -624,6 +634,58 @@ class StateClassificationCard extends StatelessWidget {
           style: ts(11, italic: FontStyle.italic, color: AppColors.muted)),
     ]);
   }
+}
+
+class ProviderStatusCard extends StatelessWidget {
+  const ProviderStatusCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.read<CourseProvider>();
+    return AppCard(
+      borderColor: AppColors.primary.withValues(alpha: 0.5),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        cardHeader(
+          Icons.hub_outlined,
+          'Provider Terpasang',
+          Text('Tahap 6', style: ts(12, color: Colors.black54)),
+          color: AppColors.primary,
+        ),
+        gap(10),
+        _row(Icons.check_circle, 'Status', 'ChangeNotifierProvider aktif',
+            color: AppColors.success),
+        _row(Icons.inventory_2_outlined, 'Package', 'provider: ^6.1.2'),
+        _row(Icons.account_tree_outlined, 'Tipe', 'ChangeNotifierProvider<CourseProvider>'),
+        _row(Icons.place_outlined, 'Lokasi', 'Membungkus MaterialApp di MyApp'),
+        _row(Icons.star_outline, 'Favorite via provider',
+            '${provider.favoriteCount}'),
+        gap(10),
+        hint(
+            'Sejak Tahap 6, CourseProvider tersedia lewat context. Widget baru cukup memanggil context.read<CourseProvider>() atau context.watch<CourseProvider>().'),
+        gap(6),
+        hint(
+            'Widget lain (CourseGridPage, CourseDetailPage, FavoriteSectionCard) masih memakai ValueNotifier lama; migrasi bertahap pada Tahap 7.'),
+      ]),
+    );
+  }
+
+  Widget _row(IconData icon, String label, String value,
+          {Color color = Colors.black87}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Text(label, style: ts(12, color: Colors.black54)),
+          const Spacer(),
+          Flexible(
+            child: Text(value,
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: ts(12, w: FontWeight.w600, color: color)),
+          ),
+        ]),
+      );
 }
 
 class HomeDashboardPageV3 extends StatefulWidget {
@@ -942,28 +1004,29 @@ class ChangeNotifierDemoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.read<CourseProvider>();
     return AppCard(
       padding: const EdgeInsets.all(16),
       borderColor: AppColors.primary.withValues(alpha: 0.5),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         cardHeader(
           Icons.sync_alt,
-          'ChangeNotifier + notifyListeners()',
-          Text('Tahap 5', style: ts(12, color: Colors.black54)),
+          'ChangeNotifier via Provider',
+          Text('Tahap 6', style: ts(12, color: Colors.black54)),
           color: AppColors.primary,
         ),
         gap(10),
         hint(
-            'CourseProvider menyimpan Set<String> dan method toggleFavorite(). Setiap perubahan memanggil notifyListeners(); ListenableBuilder mendengarkannya.'),
+            'Provider diambil dari context, bukan global. ListenableBuilder tetap dipakai untuk mendengarkan perubahan state.'),
         gap(12),
         ListenableBuilder(
-          listenable: courseProvider,
+          listenable: provider,
           builder: (_, __) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _counterRow(context),
+              _counterRow(context, provider),
               gap(10),
-              _courseToggleList(context),
+              _courseToggleList(context, provider),
             ],
           ),
         ),
@@ -971,7 +1034,7 @@ class ChangeNotifierDemoCard extends StatelessWidget {
         Row(children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () => courseProvider.clearFavorites(),
+              onPressed: () => provider.clearFavorites(),
               icon: const Icon(Icons.clear_all, size: 16),
               label: const Text('Reset'),
               style: outlined(AppColors.muted, pad: 8),
@@ -982,7 +1045,8 @@ class ChangeNotifierDemoCard extends StatelessWidget {
     );
   }
 
-  Widget _counterRow(BuildContext context) => Container(
+  Widget _counterRow(BuildContext context, CourseProvider provider) =>
+      Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.primarySoft,
@@ -992,16 +1056,16 @@ class ChangeNotifierDemoCard extends StatelessWidget {
         child: Row(children: [
           const Icon(Icons.star, size: 18, color: AppColors.primary),
           const SizedBox(width: 8),
-          Text('Jumlah favorite: ',
-              style: ts(12, color: Colors.black87)),
-          Text('${courseProvider.favoriteCount}',
+          Text('Jumlah favorite: ', style: ts(12, color: Colors.black87)),
+          Text('${provider.favoriteCount}',
               style: ts(16, w: FontWeight.bold, color: AppColors.primary)),
           const Spacer(),
-          hint('via provider'),
+          hint('via context.read'),
         ]),
       );
 
-  Widget _courseToggleList(BuildContext context) => withCourses(
+  Widget _courseToggleList(BuildContext context, CourseProvider provider) =>
+      withCourses(
         handleStates: false,
         (_, courses) => Column(children: [
           for (final c in courses.take(4))
@@ -1009,17 +1073,17 @@ class ChangeNotifierDemoCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 6),
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => courseProvider.toggleFavorite(c.code),
+                onTap: () => provider.toggleFavorite(c.code),
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                   child: Row(children: [
                     Icon(
-                      courseProvider.isFavorite(c.code)
+                      provider.isFavorite(c.code)
                           ? Icons.check_circle
                           : Icons.radio_button_unchecked,
                       size: 18,
-                      color: courseProvider.isFavorite(c.code)
+                      color: provider.isFavorite(c.code)
                           ? AppColors.success
                           : AppColors.muted,
                     ),
@@ -1159,15 +1223,11 @@ class ChangeNotifierComparisonCard extends StatelessWidget {
             Text('Tahap 5', style: ts(12, color: Colors.black54)),
           ),
           gap(10),
-          _row('Menyimpan', 'Satu nilai (int, bool, Set, ...)', 'Banyak field sekaligus'),
-          _row('Method sendiri', 'Tidak bisa', 'Bisa (mis. toggleFavorite)'),
+          _row('Menyimpan', 'Satu nilai', 'Banyak field sekaligus'),
+          _row('Method sendiri', 'Tidak bisa', 'Bisa (toggleFavorite)'),
           _row('Notifikasi', 'notifier.value = ...', 'notifyListeners()'),
-          _row('Logika terkait', 'Ditulis di luar class', 'Di dalam class'),
-          _row('Bisa diuji terpisah', 'Terbatas', 'Ya (pure Dart)'),
+          _row('Logika terkait', 'Di luar class', 'Di dalam class'),
           _row('Cocok untuk', 'Satu nilai sederhana', 'State gabungan + logika'),
-          gap(6),
-          hint(
-              'Kesimpulan: ChangeNotifier memindahkan logika state keluar dari widget. Pada Tahap 6, instance CourseProvider akan disediakan lewat Provider agar tidak perlu variabel global.'),
         ]),
       );
 
@@ -1412,6 +1472,8 @@ class _ProfileTabPage extends StatelessWidget {
         ),
         gap(),
         const StateClassificationCard(),
+        gap(),
+        const ProviderStatusCard(),
         gap(),
         const PropDrillingNoteCard(),
         gap(),
@@ -1804,6 +1866,16 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
 // ===== APP =====
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) => ChangeNotifierProvider<CourseProvider>(
+        create: (_) => CourseProvider(),
+        child: const MaterialAppShell(),
+      );
+}
+
+class MaterialAppShell extends StatelessWidget {
+  const MaterialAppShell({super.key});
 
   @override
   Widget build(BuildContext context) => MaterialApp(
