@@ -17,3 +17,7 @@ Tahap 3 : Lifting State Up dan Single Source of Truth
 Pada tahap ini, saya menerapkan lifting state up dengan menjadikan HomeDashboardPage sebagai satu-satunya pemilik _favoriteCount. Nilainya diteruskan ke tiga child, yaitu CourseSummaryTile, FavoriteTogglePanel, dan DashboardStatusBar. Dengan begitu, semua widget menggunakan sumber data yang sama sehingga nilainya tetap konsisten tanpa perlu sinkronisasi manual. Namun, cara ini masih membutuhkan constructor dan callback untuk meneruskan data, sehingga ValueNotifier dan ChangeNotifier bisa menjadi solusi pada tahap berikutnya.
 
 Pada aplikasi saya, Single Source of Truth berarti nilai _favoriteCount hanya hidup di dalam _HomeDashboardPageState. Tidak ada child yang menyimpan salinan nilai ini. Semua widget yang menampilkan atau mengubahnya harus membaca atau memanggil callback ke parent tersebut. Konsekuensinya, tidak mungkin ada dua angka berbeda untuk data yang sama, dan setiap perubahan otomatis tercermin di seluruh child karena semuanya membaca dari sumber yang sama.
+
+Tahap 4 : ValueNotifier dan ValueListenableBuilder
+
+Saya menggunakan ValueNotifier<int> bernama favoriteCounter dan ValueListenableBuilder untuk menampilkan nilainya di tiga child. Tombol + dan − dapat mengubah nilai notifier secara langsung, sehingga widget lain ikut diperbarui tanpa callback dari parent. Kode menjadi lebih ringkas, tetapi notifier masih disimpan secara global. Karena itu, pengelolaannya akan dikembangkan menggunakan ChangeNotifier dan Provider pada tahap berikutnya.
