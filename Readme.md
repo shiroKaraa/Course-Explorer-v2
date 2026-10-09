@@ -31,3 +31,7 @@ Tahap 6 : Memasang Provider Pada Widget Tree
 
 Saya menambahkan dependency provider dan membungkus MaterialApp dengan ChangeNotifierProvider agar CourseProvider bisa diakses oleh semua halaman, termasuk halaman yang dibuka melalui navigasi. Saya juga mengubah ChangeNotifierDemoCard agar mengambil provider melalui context.read() dan menambahkan ProviderStatusCard di halaman Profile. Saat provider dihapus, muncul ProviderNotFoundException, yang menunjukkan bahwa widget memang membutuhkan provider tersebut.
 Provider diletakkan di atas MaterialApp agar bisa diakses oleh semua halaman, termasuk halaman yang dibuka melalui Navigator.push. Jika provider berada di bawahnya, halaman lain mungkin tidak dapat menemukan provider dan memunculkan ProviderNotFoundException.
+
+Tahap 7 : context.watch(), context.read(), dan Consumer
+
+Saya mencoba context.watch, context.read, dan Consumer untuk mengakses CourseProvider. Dari percobaan ini, saya memahami bahwa watch memperbarui widget saat state berubah, read digunakan untuk memanggil method tanpa listen, sedangkan Consumer membatasi rebuild pada bagian widget tertentu. Saya juga mengamati melalui DevTools bahwa widget yang menggunakan read tidak ikut rebuild ketika favorite berubah.

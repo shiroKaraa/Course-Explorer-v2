@@ -29,11 +29,16 @@ final Future<Json> studentDataFuture = rootBundle
     .loadString('assets/data/student_data.json')
     .then((s) => jsonDecode(s) as Json);
 
-// ===== SHARED STATE  =====
+// ===== SHARED STATE LAMA (masih dipakai widget yang belum dimigrasi) =====
 final favorites = ValueNotifier<Set<String>>(<String>{});
 final quizScore = ValueNotifier<int?>(null);
 final courseFilter = ValueNotifier<String>('all');
 final favoriteCounter = ValueNotifier<int>(0);
+
+// ===== Instance global sementara untuk widget yang belum dimigrasi =====
+// Sejak Tahap 6, provider utama disediakan lewat ChangeNotifierProvider
+// di MyApp. Variabel ini dipertahankan sebagai jembatan sampai semua
+// widget beralih ke context.read / context.watch pada tahap berikutnya.
 final courseProvider = CourseProvider();
 
 extension CourseX on Json {
@@ -575,7 +580,14 @@ class StateClassificationCard extends StatelessWidget {
     (
       'Provider terpasang di widget tree',
       'Infrastruktur',
-      'ChangeNotifierProvider membungkus MaterialApp; CourseProvider bisa diakses lewat context.read/watch.',
+      'ChangeNotifierProvider membungkus MaterialApp.',
+      'provider',
+    ),
+    // BARU Tahap 7
+    (
+      'Akses provider via context',
+      'Infrastruktur',
+      'context.watch() untuk listen + rebuild, context.read() untuk aksi, Consumer untuk membatasi rebuild.',
       'provider',
     ),
   ];
@@ -636,11 +648,14 @@ class StateClassificationCard extends StatelessWidget {
   }
 }
 
+// ===== KARTU STATUS PROVIDER =====
 class ProviderStatusCard extends StatelessWidget {
   const ProviderStatusCard({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // context.read: mengambil instance tanpa berlangganan rebuild.
+    // Cocok karena kartu ini hanya menampilkan status saat dibuka.
     final provider = context.read<CourseProvider>();
     return AppCard(
       borderColor: AppColors.primary.withValues(alpha: 0.5),
@@ -655,16 +670,15 @@ class ProviderStatusCard extends StatelessWidget {
         _row(Icons.check_circle, 'Status', 'ChangeNotifierProvider aktif',
             color: AppColors.success),
         _row(Icons.inventory_2_outlined, 'Package', 'provider: ^6.1.2'),
-        _row(Icons.account_tree_outlined, 'Tipe', 'ChangeNotifierProvider<CourseProvider>'),
-        _row(Icons.place_outlined, 'Lokasi', 'Membungkus MaterialApp di MyApp'),
+        _row(Icons.account_tree_outlined, 'Tipe',
+            'ChangeNotifierProvider<CourseProvider>'),
+        _row(Icons.place_outlined, 'Lokasi',
+            'Membungkus MaterialApp di MyApp'),
         _row(Icons.star_outline, 'Favorite via provider',
             '${provider.favoriteCount}'),
         gap(10),
         hint(
-            'Sejak Tahap 6, CourseProvider tersedia lewat context. Widget baru cukup memanggil context.read<CourseProvider>() atau context.watch<CourseProvider>().'),
-        gap(6),
-        hint(
-            'Widget lain (CourseGridPage, CourseDetailPage, FavoriteSectionCard) masih memakai ValueNotifier lama; migrasi bertahap pada Tahap 7.'),
+            'Kartu ini memakai context.read<CourseProvider>() untuk mengambil instance. read() tidak memicu rebuild, cocok untuk data status yang tidak perlu di-update terus-menerus.'),
       ]),
     );
   }
@@ -687,6 +701,8 @@ class ProviderStatusCard extends StatelessWidget {
         ]),
       );
 }
+
+// ===== TAHAP 3 & 4: DIPERTAHANKAN SEBAGAI PERBANDINGAN =====
 
 class HomeDashboardPageV3 extends StatefulWidget {
   const HomeDashboardPageV3({super.key});
@@ -999,12 +1015,20 @@ class DashboardStatusBarV4 extends StatelessWidget {
       );
 }
 
+// ===== TAHAP 6: CHANGE NOTIFIER VIA PROVIDER (watch) =====
+// Kartu ini sekarang memakai context.watch<CourseProvider>() untuk
+// menampilkan nilai. Setiap kali provider memanggil notifyListeners(),
+// widget ini ikut rebuild dan nilainya ter-update secara otomatis.
+
 class ChangeNotifierDemoCard extends StatelessWidget {
   const ChangeNotifierDemoCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.read<CourseProvider>();
+    // context.watch: berlangganan perubahan provider.
+    // Setiap notifyListeners() akan memicu rebuild widget ini.
+    final provider = context.watch<CourseProvider>();
+
     return AppCard(
       padding: const EdgeInsets.all(16),
       borderColor: AppColors.primary.withValues(alpha: 0.5),
@@ -1017,24 +1041,16 @@ class ChangeNotifierDemoCard extends StatelessWidget {
         ),
         gap(10),
         hint(
-            'Provider diambil dari context, bukan global. ListenableBuilder tetap dipakai untuk mendengarkan perubahan state.'),
+            'Kartu ini memakai context.watch<CourseProvider>() untuk menampilkan jumlah favorite. Setiap notifyListeners() memicu rebuild otomatis.'),
         gap(12),
-        ListenableBuilder(
-          listenable: provider,
-          builder: (_, __) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _counterRow(context, provider),
-              gap(10),
-              _courseToggleList(context, provider),
-            ],
-          ),
-        ),
+        _counterRow(provider),
+        gap(10),
+        _courseToggleList(context, provider),
         gap(10),
         Row(children: [
           Expanded(
             child: OutlinedButton.icon(
-              onPressed: () => provider.clearFavorites(),
+              onPressed: () => context.read<CourseProvider>().clearFavorites(),
               icon: const Icon(Icons.clear_all, size: 16),
               label: const Text('Reset'),
               style: outlined(AppColors.muted, pad: 8),
@@ -1045,8 +1061,7 @@ class ChangeNotifierDemoCard extends StatelessWidget {
     );
   }
 
-  Widget _counterRow(BuildContext context, CourseProvider provider) =>
-      Container(
+  Widget _counterRow(CourseProvider provider) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.primarySoft,
@@ -1060,7 +1075,7 @@ class ChangeNotifierDemoCard extends StatelessWidget {
           Text('${provider.favoriteCount}',
               style: ts(16, w: FontWeight.bold, color: AppColors.primary)),
           const Spacer(),
-          hint('via context.read'),
+          hint('via watch'),
         ]),
       );
 
@@ -1073,7 +1088,10 @@ class ChangeNotifierDemoCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 6),
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => provider.toggleFavorite(c.code),
+                // context.read dipakai di sini karena kita hanya
+                // memanggil method, tidak menampilkan nilai.
+                onTap: () =>
+                    context.read<CourseProvider>().toggleFavorite(c.code),
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
@@ -1101,6 +1119,157 @@ class ChangeNotifierDemoCard extends StatelessWidget {
         ]),
       );
 }
+
+// ===== TAHAP 7: WATCH, READ, CONSUMER =====
+// Kartu ini memamerkan tiga pola sekaligus dalam satu tampilan.
+// - context.watch  → di atas, untuk menampilkan nilai & rebuild otomatis.
+// - context.read   → di tombol, untuk memanggil method tanpa listen.
+// - Consumer        → untuk membatasi rebuild hanya pada satu sub-bagian.
+
+class WatchReadConsumerDemoCard extends StatelessWidget {
+  const WatchReadConsumerDemoCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // watch: seluruh kartu ini ikut rebuild saat provider berubah.
+    final provider = context.watch<CourseProvider>();
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.success.withValues(alpha: 0.5),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        cardHeader(
+          Icons.visibility_outlined,
+          'watch, read, dan Consumer',
+          Text('Tahap 7', style: ts(12, color: Colors.black54)),
+        ),
+        gap(10),
+        hint(
+            'Tiga pola dalam satu kartu: watch untuk menampilkan nilai, read untuk aksi tombol, dan Consumer untuk membatasi rebuild ke satu area kecil.'),
+        gap(12),
+
+        // ===== WATCH =====
+        _sectionLabel(
+          'context.watch',
+          'Widget ini (seluruh kartu) rebuild setiap provider berubah.',
+          color: AppColors.primary,
+        ),
+        gap(6),
+        _counterRow(provider),
+        gap(10),
+
+        // ===== READ =====
+        _sectionLabel(
+          'context.read',
+          'Tombol di bawah hanya memanggil method, tidak listen. Tidak memicu rebuild tambahan.',
+          color: AppColors.warn,
+        ),
+        gap(6),
+        Row(children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              // context.read untuk aksi: kita hanya butuh method-nya,
+              // bukan nilai reaktif.
+              onPressed: () {
+                final p = context.read<CourseProvider>();
+                final list = p.favorites.toList()..sort();
+                if (list.isEmpty) {
+                  showMsg(context, 'Belum ada favorite untuk ditampilkan.');
+                  return;
+                }
+                showMsg(
+                  context,
+                  'Favorite aktif: ${list.length} course',
+                  color: AppColors.success,
+                );
+              },
+              icon: const Icon(Icons.info_outline, size: 16),
+              label: const Text('Cek Favorite (read)'),
+              style: filled(AppColors.warn, pad: 10),
+            ),
+          ),
+        ]),
+        gap(14),
+
+        // ===== CONSUMER =====
+        _sectionLabel(
+          'Consumer',
+          'Hanya tile kecil di bawah yang rebuild, bukan seluruh kartu.',
+          color: AppColors.success,
+        ),
+        gap(6),
+        const ConsumerOnlyCounterTile(),
+      ]),
+    );
+  }
+
+  Widget _sectionLabel(String title, String desc, {required Color color}) =>
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(title, style: ts(10, w: FontWeight.bold, color: color)),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(desc,
+              style: ts(11, color: Colors.black54, height: 1.4)),
+        ),
+      ]);
+
+  Widget _counterRow(CourseProvider provider) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.star, size: 18, color: AppColors.primary),
+          const SizedBox(width: 8),
+          Text('Jumlah favorite: ', style: ts(12, color: Colors.black87)),
+          Text('${provider.favoriteCount}',
+              style: ts(16, w: FontWeight.bold, color: AppColors.primary)),
+          const Spacer(),
+          hint('watch'),
+        ]),
+      );
+}
+
+/// Widget kecil yang HANYA memakai Consumer<CourseProvider>.
+/// Setiap provider berubah, hanya widget ini yang rebuild —
+/// bukan seluruh kartu di atasnya. Ini contoh rebuild yang paling
+/// terbatas (rebuild scope = widget ini saja).
+class ConsumerOnlyCounterTile extends StatelessWidget {
+  const ConsumerOnlyCounterTile({super.key});
+
+  @override
+  Widget build(BuildContext context) => Consumer<CourseProvider>(
+        builder: (context, provider, child) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppColors.successSoft,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+          ),
+          child: Row(children: [
+            const Icon(Icons.visibility, size: 18, color: AppColors.success),
+            const SizedBox(width: 8),
+            Text('Consumer — favorite: ',
+                style: ts(12, color: Colors.black87)),
+            Text('${provider.favoriteCount}',
+                style: ts(16, w: FontWeight.bold, color: AppColors.success)),
+            const Spacer(),
+            hint('rebuild terbatas'),
+          ]),
+        ),
+      );
+}
+
+// ===== CATATAN TAHAP 2 (riwayat) =====
 class PropDrillingNoteCard extends StatelessWidget {
   const PropDrillingNoteCard({super.key});
 
@@ -1136,6 +1305,8 @@ class PropDrillingNoteCard extends StatelessWidget {
         ]),
       );
 }
+
+// ===== CATATAN TAHAP 3 (riwayat) =====
 class LiftingStateUpNoteCard extends StatelessWidget {
   const LiftingStateUpNoteCard({super.key});
 
@@ -1170,6 +1341,8 @@ class LiftingStateUpNoteCard extends StatelessWidget {
         ]),
       );
 }
+
+// ===== CATATAN TAHAP 4 (riwayat) =====
 class ValueNotifierComparisonCard extends StatelessWidget {
   const ValueNotifierComparisonCard({super.key});
 
@@ -1186,9 +1359,11 @@ class ValueNotifierComparisonCard extends StatelessWidget {
           gap(10),
           _row('Pemilik state', 'Widget (State class)', 'ValueNotifier global'),
           _row('Child menerima nilai lewat', 'Constructor', 'Reference notifier'),
-          _row('Child mengubah nilai lewat', 'Callback parent', 'notifier.value = ...'),
+          _row('Child mengubah nilai lewat', 'Callback parent',
+              'notifier.value = ...'),
           _row('Rebuild dipicu oleh', 'setState()', 'notifier.value berubah'),
-          _row('Cakupan rebuild', 'Seluruh subtree parent', 'Hanya ValueListenableBuilder'),
+          _row('Cakupan rebuild', 'Seluruh subtree parent',
+              'Hanya ValueListenableBuilder'),
         ]),
       );
 
@@ -1210,6 +1385,8 @@ class ValueNotifierComparisonCard extends StatelessWidget {
         ]),
       );
 }
+
+// ===== CATATAN TAHAP 5 (riwayat) =====
 class ChangeNotifierComparisonCard extends StatelessWidget {
   const ChangeNotifierComparisonCard({super.key});
 
@@ -1246,6 +1423,74 @@ class ChangeNotifierComparisonCard extends StatelessWidget {
                   style: ts(11, color: AppColors.success, height: 1.3)),
             ),
           ]),
+        ]),
+      );
+}
+
+// ===== CATATAN TAHAP 7 =====
+class ProviderPatternsComparisonCard extends StatelessWidget {
+  const ProviderPatternsComparisonCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.primary.withValues(alpha: 0.5),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.visibility_outlined,
+            'Pola Akses Provider',
+            Text('Tahap 7', style: ts(12, color: Colors.black54)),
+            color: AppColors.primary,
+          ),
+          gap(10),
+          _row(
+            'context.watch<T>()',
+            'Listen + rebuild widget',
+            'Menampilkan nilai di UI',
+            AppColors.primary,
+          ),
+          _row(
+            'context.read<T>()',
+            'Ambil instance, tanpa listen',
+            'Memanggil method / aksi tombol',
+            AppColors.warn,
+          ),
+          _row(
+            'Consumer<T>',
+            'Listen + rebuild terbatas',
+            'Membatasi rebuild ke area kecil',
+            AppColors.success,
+          ),
+          _row(
+            'ListenableBuilder',
+            'Listen ke Listenable apa pun',
+            'Alternatif tanpa Provider',
+            AppColors.muted,
+          ),
+          gap(6),
+          hint(
+              'Aturan singkat: watch untuk tampilkan, read untuk aksi, Consumer untuk area kecil yang sering berubah. Jangan panggil watch di dalam onPressed.'),
+        ]),
+      );
+
+  Widget _row(String label, String behavior, String useCase, Color color) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(label,
+                  style: ts(10, w: FontWeight.bold, color: color)),
+            ),
+          ]),
+          const SizedBox(height: 4),
+          Text(behavior,
+              style: ts(11, w: FontWeight.w600, color: Colors.black87)),
+          Text(useCase, style: ts(11, color: Colors.black54, height: 1.3)),
         ]),
       );
 }
@@ -1384,6 +1629,9 @@ class _HomeTabPage extends StatelessWidget {
         children: [
           const IdentityCard(),
           gap(),
+          // BARU Tahap 7: kartu demo watch/read/Consumer.
+          const WatchReadConsumerDemoCard(),
+          gap(),
           const ChangeNotifierDemoCard(),
           gap(),
           const HomeDashboardPageV3(),
@@ -1474,6 +1722,9 @@ class _ProfileTabPage extends StatelessWidget {
         const StateClassificationCard(),
         gap(),
         const ProviderStatusCard(),
+        gap(),
+        // BARU Tahap 7: pola akses provider.
+        const ProviderPatternsComparisonCard(),
         gap(),
         const PropDrillingNoteCard(),
         gap(),
