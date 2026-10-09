@@ -4,6 +4,7 @@ import 'package:flutter/services.dart' show rootBundle, Clipboard, ClipboardData
 import 'package:provider/provider.dart';
 import 'course_provider.dart';
 import 'models/course.dart';
+import 'repositories/course_repository.dart';
 import 'services/course_service.dart';
 import 'quiz_data.dart';
 
@@ -38,6 +39,7 @@ final courseFilter = ValueNotifier<String>('all');
 final favoriteCounter = ValueNotifier<int>(0);
 final courseProvider = CourseProvider();
 final courseService = CourseService();
+final courseRepository = CourseRepositoryImpl(courseService);
 
 extension CourseX on Json {
   String str(String k, [String d = '-']) => this[k]?.toString() ?? d;
@@ -590,14 +592,21 @@ class StateClassificationCard extends StatelessWidget {
     (
       'Model Course',
       'Representasi data',
-      'Mengubah Map<String, dynamic> menjadi object bertipe (code, title, credits, status).',
+      'Mengubah Map<String, dynamic> menjadi object bertipe.',
       'Course.fromJson',
     ),
     (
       'CourseService',
       'Data access',
-      'Membaca asset JSON dan mengembalikan List<Course>. UI tidak lagi tahu path asset atau cara parsing.',
+      'Membaca asset JSON dan mengembalikan List<Course>.',
       'rootBundle + Course.fromJson',
+    ),
+    // BARU Tahap 10
+    (
+      'CourseRepository',
+      'Abstraksi data',
+      'Kontrak + implementasi yang membungkus CourseService. Provider tahu kontrak, bukan implementasi.',
+      'abstract + impl',
     ),
   ];
 
@@ -606,6 +615,7 @@ class StateClassificationCard extends StatelessWidget {
     if (kind.startsWith('Infrastruktur')) return AppColors.primary;
     if (kind.startsWith('Representasi')) return AppColors.warn;
     if (kind.startsWith('Data access')) return AppColors.muted;
+    if (kind.startsWith('Abstraksi')) return AppColors.success;
     if (kind.contains('SSOT')) return AppColors.warn;
     return AppColors.primary;
   }
@@ -711,6 +721,7 @@ class ProviderStatusCard extends StatelessWidget {
       );
 }
 
+// ===== TAHAP 8: MODEL COURSE DEMO =====
 class CourseModelDemoCard extends StatelessWidget {
   const CourseModelDemoCard({super.key});
 
@@ -807,6 +818,7 @@ class CourseModelDemoCard extends StatelessWidget {
       );
 }
 
+// ===== TAHAP 9: COURSE SERVICE DEMO =====
 class CourseServiceDemoCard extends StatefulWidget {
   const CourseServiceDemoCard({super.key});
 
@@ -948,6 +960,243 @@ class _CourseServiceDemoCardState extends State<CourseServiceDemoCard> {
       );
 }
 
+// ===== TAHAP 10: COURSE REPOSITORY DEMO =====
+// Kartu ini memanggil courseRepository.getCourses() dan menerima
+// List<Course>. UI tidak tahu bahwa di baliknya ada CourseService,
+// apalagi asset JSON. Kontrak yang dipakai adalah CourseRepository.
+class CourseRepositoryDemoCard extends StatefulWidget {
+  const CourseRepositoryDemoCard({super.key});
+
+  @override
+  State<CourseRepositoryDemoCard> createState() =>
+      _CourseRepositoryDemoCardState();
+}
+
+class _CourseRepositoryDemoCardState extends State<CourseRepositoryDemoCard> {
+  late Future<List<Course>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = courseRepository.getCourses();
+  }
+
+  void _reload() {
+    setState(() {
+      _future = courseRepository.getCourses();
+    });
+    showMsg(context, 'Memuat ulang data dari repository...',
+        color: AppColors.success);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.success.withValues(alpha: 0.5),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        cardHeader(
+          Icons.storage_outlined,
+          'CourseRepository',
+          Text('Tahap 10', style: ts(12, color: Colors.black54)),
+        ),
+        gap(10),
+        hint(
+            'UI memanggil courseRepository.getCourses(). Repository membungkus service; UI tidak tahu implementasi konkretnya.'),
+        gap(12),
+        FutureBuilder<List<Course>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return _loadingTile();
+            }
+            if (snap.hasError) {
+              return _errorTile('${snap.error}');
+            }
+            final courses = snap.data ?? const <Course>[];
+            return _successTile(courses);
+          },
+        ),
+        gap(10),
+        Row(children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: _reload,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: const Text('Muat Ulang'),
+              style: outlined(AppColors.success, pad: 10),
+            ),
+          ),
+        ]),
+      ]),
+    );
+  }
+
+  Widget _loadingTile() => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: Row(children: [
+          const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 10),
+          Text('Memuat data dari repository...',
+              style: ts(12, color: Colors.black87)),
+        ]),
+      );
+
+  Widget _errorTile(String message) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.errorSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.35)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.error_outline, size: 18, color: Colors.red),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text('Error: $message',
+                style: ts(12, color: Colors.red.shade700)),
+          ),
+        ]),
+      );
+
+  Widget _successTile(List<Course> courses) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.successSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.check_circle, size: 18, color: AppColors.success),
+            const SizedBox(width: 8),
+            Text('Repository sukses: ${courses.length} course',
+                style: ts(12, w: FontWeight.bold, color: AppColors.success)),
+            const Spacer(),
+            hint('via repository'),
+          ]),
+          gap(10),
+          for (final c in courses.take(3))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(children: [
+                const Icon(Icons.storage_outlined,
+                    size: 14, color: AppColors.success),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text('${c.code} — ${c.title} '
+                      '(${c.credits} SKS)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ts(11, color: Colors.black87)),
+                ),
+              ]),
+            ),
+        ]),
+      );
+}
+
+// ===== TAHAP 10: PERBANDINGAN SERVICE vs REPOSITORY =====
+class CourseRepositoryComparisonCard extends StatelessWidget {
+  const CourseRepositoryComparisonCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.success.withValues(alpha: 0.5),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.storage_outlined,
+            'CourseService vs CourseRepository',
+            Text('Tahap 10', style: ts(12, color: Colors.black54)),
+          ),
+          gap(10),
+          _row('Peran', 'Detail teknis data', 'Kontrak sumber data'),
+          _row('Tahu asset/JSON?', 'Ya', 'Tidak'),
+          _row('Bisa diganti?', 'Hanya isinya', 'Ya, via interface'),
+          _row('Bisa di-mock?', 'Sulit', 'Ya (FakeCourseRepository)'),
+          _row('Dipakai oleh', 'Repository', 'Provider / UI'),
+          _row('Contoh perubahan', 'Ganti path JSON', 'Ganti service apa pun'),
+          gap(6),
+          hint(
+              'Kesimpulan: service tahu cara membaca data; repository menyediakan kontrak agar layer atas tidak bergantung pada implementasi konkret.'),
+        ]),
+      );
+
+  Widget _row(String label, String serviceSide, String repoSide) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: ts(11, w: FontWeight.bold, color: Colors.black87)),
+          const SizedBox(height: 2),
+          Row(children: [
+            Expanded(
+              child: Text('Service: $serviceSide',
+                  style: ts(11, color: AppColors.muted, height: 1.3)),
+            ),
+            Expanded(
+              child: Text('Repo: $repoSide',
+                  style: ts(11, color: AppColors.success, height: 1.3)),
+            ),
+          ]),
+        ]),
+      );
+}
+
+// ===== TAHAP 8: PERBANDINGAN MAP vs MODEL =====
+class CourseModelComparisonCard extends StatelessWidget {
+  const CourseModelComparisonCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.warn.withValues(alpha: 0.5),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.data_object,
+            'Map vs Model Course',
+            Text('Tahap 8', style: ts(12, color: Colors.black54)),
+            color: AppColors.warn,
+          ),
+          gap(10),
+          _row('Tipe data', 'Map<String, dynamic>', 'Course (class)'),
+          _row('Akses field', "course['title']", 'course.title'),
+          _row('Keamanan tipe', 'Runtime (bisa salah ketik)', 'Compile-time'),
+          _row('Parsing', 'Manual di UI', 'Course.fromJson()'),
+          _row('Helper/logic', 'Sulit (tersebar)', 'Di dalam class (isDone, progress)'),
+          _row('Refactor aman', 'Rentan typo key', 'Rename field terbantu IDE'),
+          gap(6),
+          hint(
+              'Kesimpulan: model memindahkan representasi data dari Map longgar ke object bertipe. UI menjadi lebih aman dan mudah dibaca.'),
+        ]),
+      );
+
+  Widget _row(String label, String before, String after) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: ts(11, w: FontWeight.bold, color: Colors.black87)),
+          const SizedBox(height: 2),
+          Row(children: [
+            Expanded(
+              child: Text('Map: $before',
+                  style: ts(11, color: AppColors.warn, height: 1.3)),
+            ),
+            Expanded(
+              child: Text('Model: $after',
+                  style: ts(11, color: AppColors.success, height: 1.3)),
+            ),
+          ]),
+        ]),
+      );
+}
+
+// ===== TAHAP 9: PERBANDINGAN SEBELUM/SESUDAH SERVICE =====
 class CourseServiceComparisonCard extends StatelessWidget {
   const CourseServiceComparisonCard({super.key});
 
@@ -999,51 +1248,7 @@ class CourseServiceComparisonCard extends StatelessWidget {
       );
 }
 
-class CourseModelComparisonCard extends StatelessWidget {
-  const CourseModelComparisonCard({super.key});
-
-  @override
-  Widget build(BuildContext context) => AppCard(
-        borderColor: AppColors.warn.withValues(alpha: 0.5),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          cardHeader(
-            Icons.data_object,
-            'Map vs Model Course',
-            Text('Tahap 8', style: ts(12, color: Colors.black54)),
-            color: AppColors.warn,
-          ),
-          gap(10),
-          _row('Tipe data', 'Map<String, dynamic>', 'Course (class)'),
-          _row('Akses field', "course['title']", 'course.title'),
-          _row('Keamanan tipe', 'Runtime (bisa salah ketik)', 'Compile-time'),
-          _row('Parsing', 'Manual di UI', 'Course.fromJson()'),
-          _row('Helper/logic', 'Sulit (tersebar)', 'Di dalam class (isDone, progress)'),
-          _row('Refactor aman', 'Rentan typo key', 'Rename field terbantu IDE'),
-          gap(6),
-          hint(
-              'Kesimpulan: model memindahkan representasi data dari Map longgar ke object bertipe. UI menjadi lebih aman dan mudah dibaca.'),
-        ]),
-      );
-
-  Widget _row(String label, String before, String after) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: ts(11, w: FontWeight.bold, color: Colors.black87)),
-          const SizedBox(height: 2),
-          Row(children: [
-            Expanded(
-              child: Text('Map: $before',
-                  style: ts(11, color: AppColors.warn, height: 1.3)),
-            ),
-            Expanded(
-              child: Text('Model: $after',
-                  style: ts(11, color: AppColors.success, height: 1.3)),
-            ),
-          ]),
-        ]),
-      );
-}
-
+// ===== TAHAP 3 =====
 class HomeDashboardPageV3 extends StatefulWidget {
   const HomeDashboardPageV3({super.key});
 
@@ -1206,6 +1411,7 @@ class DashboardStatusBarV3 extends StatelessWidget {
       );
 }
 
+// ===== TAHAP 4 =====
 class HomeDashboardPageV4 extends StatelessWidget {
   const HomeDashboardPageV4({super.key});
 
@@ -1354,6 +1560,8 @@ class DashboardStatusBarV4 extends StatelessWidget {
         ]),
       );
 }
+
+// ===== TAHAP 6 =====
 class ChangeNotifierDemoCard extends StatelessWidget {
   const ChangeNotifierDemoCard({super.key});
 
@@ -1450,6 +1658,7 @@ class ChangeNotifierDemoCard extends StatelessWidget {
       );
 }
 
+// ===== TAHAP 7 =====
 class WatchReadConsumerDemoCard extends StatelessWidget {
   const WatchReadConsumerDemoCard({super.key});
 
@@ -1580,6 +1789,7 @@ class ConsumerOnlyCounterTile extends StatelessWidget {
       );
 }
 
+// ===== CATATAN =====
 class PropDrillingNoteCard extends StatelessWidget {
   const PropDrillingNoteCard({super.key});
 
@@ -1935,6 +2145,8 @@ class _HomeTabPage extends StatelessWidget {
         children: [
           const IdentityCard(),
           gap(),
+          const CourseRepositoryDemoCard(),
+          gap(),
           const CourseServiceDemoCard(),
           gap(),
           const CourseModelDemoCard(),
@@ -2034,9 +2246,12 @@ class _ProfileTabPage extends StatelessWidget {
         gap(),
         const ProviderPatternsComparisonCard(),
         gap(),
-        const CourseModelComparisonCard(),
+        // BARU Tahap 10: perbandingan service vs repository.
+        const CourseRepositoryComparisonCard(),
         gap(),
         const CourseServiceComparisonCard(),
+        gap(),
+        const CourseModelComparisonCard(),
         gap(),
         const PropDrillingNoteCard(),
         gap(),
