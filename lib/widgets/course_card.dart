@@ -9,6 +9,7 @@ class CourseCard extends StatefulWidget {
   final Json course;
   final bool isFavorite;
   final VoidCallback? onTap, onLongPress;
+  final VoidCallback? onToggleFavorite;
 
   const CourseCard({
     super.key,
@@ -16,6 +17,7 @@ class CourseCard extends StatefulWidget {
     this.isFavorite = false,
     this.onTap,
     this.onLongPress,
+    this.onToggleFavorite,
   });
 
   @override
@@ -50,7 +52,22 @@ class _CourseCardState extends State<CourseCard> {
                 overflow: TextOverflow.ellipsis,
                 style: ts(14, w: FontWeight.bold, color: Colors.black)),
           ),
-          if (widget.isFavorite)
+          if (widget.onToggleFavorite != null)
+            InkWell(
+              onTap: widget.onToggleFavorite,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(
+                  widget.isFavorite ? Icons.star : Icons.star_border,
+                  color: widget.isFavorite
+                      ? AppColors.success
+                      : AppColors.muted,
+                  size: 20,
+                ),
+              ),
+            )
+          else if (widget.isFavorite)
             const Icon(Icons.star, color: AppColors.success, size: 18),
         ]),
         gap(4),

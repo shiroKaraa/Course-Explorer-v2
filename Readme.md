@@ -56,3 +56,6 @@ Tahap 12 : Refactor Struktur Folder
 
 Pada tahap ini, saya merapikan struktur folder dengan menerapkan separation of concerns. File main.dart berhasil dipangkas dari 2.967 baris menjadi sekitar 40 baris, sedangkan class lainnya dipindahkan ke folder sesuai tanggung jawabnya. Setelah import diperbaiki, aplikasi tetap berjalan seperti sebelumnya. Saya juga menemukan masih ada dua sumber state favorites, yaitu ValueNotifier lama dan CourseProvider, yang akan disatukan pada tahap berikutnya.
 
+Tahap 13 : 
+
+Pada tahap ini, saya menyatukan state favorites ke CourseProvider sebagai satu-satunya sumber data dan menghapus ValueNotifier lama. Saya juga memperbarui fitur favorite di halaman Courses dan Detail, menambahkan tombol favorite pada CourseCard, serta membuat halaman dan tab Favorites. Hasilnya, perubahan favorite langsung konsisten di seluruh halaman tanpa perlu callback atau prop drilling.

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import 'package:provider/provider.dart';
+
 import '../core/app_colors.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/demo_scaffold.dart';
 import '../widgets/identity_card.dart';
@@ -12,9 +15,8 @@ import '../widgets/status_helper.dart';
 
 class CourseDetailPage extends StatefulWidget {
   final Json course;
-  final bool isFavorite;
 
-  const CourseDetailPage({super.key, required this.course, this.isFavorite = false});
+  const CourseDetailPage({super.key, required this.course});
 
   @override
   State<CourseDetailPage> createState() => _CourseDetailPageState();
@@ -26,11 +28,16 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
   @override
   Widget build(BuildContext context) {
     final course = widget.course;
+    final code = course.str('code');
+
+    // watch: rebuild saat favorites berubah.
+    final provider = context.watch<CourseProvider>();
+    final isFavorite = provider.isFavorite(code);
+
     final status = course.status;
     final color = StatusHelper.color(status);
     final credits = course.str('credits');
     final progress = StatusHelper.progressOf(status);
-    final code = course.str('code');
     final desc = course.str('description', 'Tidak ada deskripsi.');
 
     return DemoScaffold(
@@ -131,12 +138,22 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         ),
         gap(10),
         ElevatedButton.icon(
-          onPressed: () => Navigator.pop(context, !widget.isFavorite),
-          icon: Icon(widget.isFavorite ? Icons.star_border : Icons.star, size: 18),
-          label: Text(widget.isFavorite
-              ? 'Hapus dari Favorite & Kembali'
-              : 'Tandai Favorite & Kembali'),
-          style: filled(widget.isFavorite ? AppColors.muted : AppColors.success),
+          onPressed: () {
+            // Toggle langsung ke provider.
+            context.read<CourseProvider>().toggleFavorite(code);
+            final nowFav = context.read<CourseProvider>().isFavorite(code);
+            showMsg(
+              context,
+              '${course.str('title', 'Course')} '
+              '${nowFav ? 'ditandai sebagai favorite!' : 'dihapus dari favorite.'}',
+              color: nowFav ? AppColors.success : AppColors.primary,
+            );
+          },
+          icon: Icon(isFavorite ? Icons.star : Icons.star_border, size: 18),
+          label: Text(isFavorite
+              ? 'Hapus dari Favorite'
+              : 'Tandai sebagai Favorite'),
+          style: filled(isFavorite ? AppColors.muted : AppColors.success),
         ),
       ]),
     );

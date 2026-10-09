@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../core/app_colors.dart';
-import '../core/app_strings.dart';        
+import '../core/app_strings.dart';
 import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
 import '../widgets/demo_scaffold.dart';
 import '../widgets/identity_card.dart';
+import 'course_detail_page.dart';
 
 const _filterOptions = <(String, String, IconData)>[
   ('all', 'Semua', Icons.apps),
@@ -21,6 +25,38 @@ bool _matchesFilter(String filter, Json c, Set<String> favs) =>
       'favorite' => favs.contains(c.code),
       _ => true,
     };
+
+void openCourse(BuildContext context, Json course) {
+  go(context, CourseDetailPage(course: course));
+}
+
+Future<void> confirmRemoveFavorite(BuildContext context, Json course) async {
+  final code = course.code;
+  final provider = context.read<CourseProvider>();
+  if (!provider.isFavorite(code)) return;
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Hapus Favorite?'),
+      content:
+          Text('Hapus "${course.str('title', 'Course')}" dari daftar favorite?'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal')),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red, foregroundColor: Colors.white),
+          child: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
+  if (ok != true || !context.mounted) return;
+  provider.toggleFavorite(code);
+  showMsg(context, 'Dihapus dari favorite.', color: Colors.red);
+}
 
 class CourseGridPage extends StatelessWidget {
   final bool standalone;
@@ -44,13 +80,16 @@ class CourseGridPage extends StatelessWidget {
         const _FilterBar(),
         Expanded(
           child: ListenableBuilder(
-            listenable: Listenable.merge([favorites, courseFilter]),
-            builder: (_, __) {
-              final favs = favorites.value;
+            listenable: Listenable.merge([courseFilter]),
+            builder: (context, _) {
+              final provider = context.watch<CourseProvider>();
+              final favs = provider.favorites;
               final filtered = courses
                   .where((c) => _matchesFilter(courseFilter.value, c, favs))
                   .toList();
-              return filtered.isEmpty ? _emptyState() : _grid(filtered, favs);
+              return filtered.isEmpty
+                  ? _emptyState()
+                  : _grid(context, filtered, provider);
             },
           ),
         ),
@@ -70,22 +109,31 @@ class CourseGridPage extends StatelessWidget {
         ),
       );
 
-  Widget _grid(List<Json> items, Set<String> favs) => LayoutBuilder(
+  Widget _grid(BuildContext context, List<Json> items, CourseProvider provider) =>
+      LayoutBuilder(
         builder: (context, c) => GridView.builder(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columnsFor(c.maxWidth),
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            mainAxisExtent: 170,
+            mainAxisExtent: 180,
           ),
           itemCount: items.length,
-          itemBuilder: (_, i) => CourseCard(
-            course: items[i],
-            isFavorite: favs.contains(items[i].code),
-            onTap: () => openCourse(context, items[i]),
-            onLongPress: () => confirmRemoveFavorite(context, items[i]),
-          ),
+          itemBuilder: (_, i) {
+            final course = items[i];
+            final code = course.code;
+            final isFav = provider.isFavorite(code);
+            return CourseCard(
+              course: course,
+              isFavorite: isFav,
+              onTap: () => openCourse(context, course),
+              onLongPress: () => confirmRemoveFavorite(context, course),
+              onToggleFavorite: () {
+                context.read<CourseProvider>().toggleFavorite(code);
+              },
+            );
+          },
         ),
       );
 }
