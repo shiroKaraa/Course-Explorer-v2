@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../core/app_colors.dart';
-import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
+import '../models/course.dart';
 import 'app_card.dart';
 import 'status_helper.dart';
 
 class CourseCard extends StatefulWidget {
-  final Json course;
+  final Course course;
   final bool isFavorite;
   final VoidCallback? onTap, onLongPress;
   final VoidCallback? onToggleFavorite;
@@ -40,7 +41,7 @@ class _CourseCardState extends State<CourseCard> {
       onTap: widget.onTap,
       onLongPress: widget.onLongPress,
       borderColor: widget.isFavorite
-          ? AppColors.success.withValues(alpha: 0.6)
+          ? AppColors.gold.withValues(alpha: 0.7)
           : color.withValues(alpha: 0.25),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -60,34 +61,32 @@ class _CourseCardState extends State<CourseCard> {
                 padding: const EdgeInsets.all(4),
                 child: Icon(
                   widget.isFavorite ? Icons.star : Icons.star_border,
-                  color: widget.isFavorite
-                      ? AppColors.success
-                      : AppColors.muted,
+                  color:
+                      widget.isFavorite ? AppColors.gold : AppColors.muted,
                   size: 20,
                 ),
               ),
             )
           else if (widget.isFavorite)
-            const Icon(Icons.star, color: AppColors.success, size: 18),
+            const Icon(Icons.star, color: AppColors.gold, size: 18),
         ]),
         gap(4),
-        Text('${course.str('code')} • ${course.str('credits')} SKS',
-            style: ts(11, color: Colors.black54)),
+        Text(course.summary, style: ts(11, color: Colors.black54)),
         gap(4),
         Expanded(
           child: _showDescription
               ? SingleChildScrollView(
-                  child: Text(course.str('description', ''),
+                  child: Text(course.description,
                       style: ts(11, color: Colors.black87, height: 1.4)),
                 )
-              : Text(course.str('description', ''),
+              : Text(course.description,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: ts(11, color: Colors.black45, height: 1.3)),
         ),
         Row(children: [
           Expanded(
-            child: Text('Dosen: ${course.str('dosen')}',
+            child: Text('Dosen: ${course.dosen}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style:
