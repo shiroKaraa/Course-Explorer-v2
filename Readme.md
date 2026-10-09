@@ -26,3 +26,8 @@ Tahap 5 : ChangeNotifier dan notifyListeners()
 
 Saya membuat CourseProvider dengan ChangeNotifier untuk menyimpan daftar favorite dan mengelolanya melalui method toggleFavorite(). Dengan ListenableBuilder, perubahan favorite langsung memperbarui jumlah dan ikon pada UI. Dibandingkan ValueNotifier, ChangeNotifier lebih fleksibel karena dapat mengelola beberapa state dan method dalam satu class. Namun, instance-nya masih global dan akan dikelola menggunakan Provider pada tahap berikutnya. 
 notifyListeners() memberi tahu widget yang mendengarkan bahwa state telah berubah, sehingga UI dapat diperbarui. Jika tidak dipanggil, nilai state tetap berubah, tetapi tampilan tidak otomatis ikut diperbarui.
+
+Tahap 6 : Memasang Provider Pada Widget Tree
+
+Saya menambahkan dependency provider dan membungkus MaterialApp dengan ChangeNotifierProvider agar CourseProvider bisa diakses oleh semua halaman, termasuk halaman yang dibuka melalui navigasi. Saya juga mengubah ChangeNotifierDemoCard agar mengambil provider melalui context.read() dan menambahkan ProviderStatusCard di halaman Profile. Saat provider dihapus, muncul ProviderNotFoundException, yang menunjukkan bahwa widget memang membutuhkan provider tersebut.
+Provider diletakkan di atas MaterialApp agar bisa diakses oleh semua halaman, termasuk halaman yang dibuka melalui Navigator.push. Jika provider berada di bawahnya, halaman lain mungkin tidak dapat menemukan provider dan memunculkan ProviderNotFoundException.
