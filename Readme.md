@@ -80,3 +80,13 @@ Tahap 14-D :
 
 Saya merombak halaman Home dan Profile agar lebih rapi dan berfokus pada fitur utama. Home kini menampilkan identitas mahasiswa, statistik course, SKS dan favorite, course terbaru, AsyncCoursesCard, serta MiniQuiz. Sementara itu, Profile berisi informasi mahasiswa, statistik, dan daftar favorite. Kartu demo dan catatan tahapan dipindahkan ke halaman terpisah agar tidak menumpuk. Saya juga menerapkan aksen emas yang dipadukan dengan warna biru dan hijau sesuai tema Undiksha.
 
+Tahap 14-E :
+
+Saya menambahkan fitur search pada tab Courses menggunakan TextEditingController dan setState() karena pencarian termasuk local UI state. Pencarian dapat dilakukan berdasarkan nama atau kode course, serta digunakan bersamaan dengan filter status. Saya juga menambahkan tombol clear dan empty state yang berbeda untuk hasil pencarian atau filter kosong. Fitur lama seperti favorite dan navigasi detail tetap berjalan normal.
+
+Tahap 14-F :
+
+Saya menambahkan animasi fade-in dan slide-up pada elemen Home, animasi membesar pada tombol favorite, serta transisi halus saat deskripsi course dibuka atau ditutup. Semua animasi menggunakan durasi singkat dan Curves.easeOut agar terasa lebih natural.
+
+Saya tetap menggunakan IndexedStack di MainShellPage supaya state setiap tab, seperti search query, tidak hilang saat berpindah tab. Animasi dibuat secukupnya agar aplikasi terasa lebih halus tanpa berlebihan.
+
