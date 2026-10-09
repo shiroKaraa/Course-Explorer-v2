@@ -502,8 +502,6 @@ class _MiniQuizCardState extends State<MiniQuizCard> {
       );
 }
 
-// ===== KARTU KLASIFIKASI STATE (BARU untuk Tahap 1) =====
-
 class StateClassificationCard extends StatelessWidget {
   const StateClassificationCard({super.key});
 
@@ -543,6 +541,12 @@ class StateClassificationCard extends StatelessWidget {
       'Shared',
       'Quiz score tampil di Profile; filter dipakai CourseGridPage dan _FilterBar.',
       'ValueNotifier',
+    ),
+    (
+      '_favoriteCount di HomeDashboardPage',
+      'Local',
+      'Dimiliki HomeDashboardPage, dikirim ke dua child lewat constructor + callback. Contoh prop drilling.',
+      'setState()',
     ),
   ];
 
@@ -596,6 +600,178 @@ class StateClassificationCard extends StatelessWidget {
           style: ts(11, italic: FontStyle.italic, color: AppColors.muted)),
     ]);
   }
+}
+
+class HomeDashboardPage extends StatefulWidget {
+  const HomeDashboardPage({super.key});
+
+  @override
+  State<HomeDashboardPage> createState() => _HomeDashboardPageState();
+}
+
+class _HomeDashboardPageState extends State<HomeDashboardPage> {
+  int _favoriteCount = 0;
+
+  void _increment() => setState(() => _favoriteCount++);
+  void _decrement() {
+    if (_favoriteCount == 0) return;
+    setState(() => _favoriteCount--);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.warn.withValues(alpha: 0.35),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        cardHeader(
+          Icons.account_tree,
+          'Prop Drilling',
+          Text('Tahap 2', style: ts(12, color: Colors.black54)),
+        ),
+        gap(10),
+        hint(
+            'Parent memiliki _favoriteCount. Dua child menerima data yang sama lewat constructor; satu child mengirim aksi balik lewat callback.'),
+        gap(12),
+        Row(children: [
+          Expanded(
+            child: CourseSummaryTile(
+              favoriteCount: _favoriteCount,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: FavoriteTogglePanel(
+              favoriteCount: _favoriteCount,
+              onIncrement: _increment,
+              onDecrement: _decrement,
+            ),
+          ),
+        ]),
+        gap(10),
+        hint(
+            'Jika ingin menambah child ketiga yang butuh nilai yang sama, kita harus menambah satu constructor lagi.'),
+      ]),
+    );
+  }
+}
+
+class CourseSummaryTile extends StatelessWidget {
+  final int favoriteCount;
+
+  const CourseSummaryTile({super.key, required this.favoriteCount});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.summarize_outlined,
+                size: 18, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text('Ringkasan',
+                style: ts(12, w: FontWeight.bold, color: AppColors.primary)),
+          ]),
+          gap(6),
+          Text('Favorite saat ini:',
+              style: ts(11, color: Colors.black54)),
+          Text('$favoriteCount',
+              style: ts(22, w: FontWeight.bold, color: AppColors.primary)),
+        ]),
+      );
+}
+
+class FavoriteTogglePanel extends StatelessWidget {
+  final int favoriteCount;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
+
+  const FavoriteTogglePanel({
+    super.key,
+    required this.favoriteCount,
+    required this.onIncrement,
+    required this.onDecrement,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.successSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.tune, size: 18, color: AppColors.success),
+            const SizedBox(width: 6),
+            Text('Kontrol',
+                style: ts(12, w: FontWeight.bold, color: AppColors.success)),
+          ]),
+          gap(6),
+          hint('Nilai dibaca: $favoriteCount'),
+          gap(6),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: onDecrement,
+                style: outlined(AppColors.muted, pad: 8),
+                child: const Icon(Icons.remove, size: 16),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: onIncrement,
+                style: filled(AppColors.success, pad: 8),
+                child: const Icon(Icons.add, size: 16),
+              ),
+            ),
+          ]),
+        ]),
+      );
+}
+
+class PropDrillingNoteCard extends StatelessWidget {
+  const PropDrillingNoteCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.warn.withValues(alpha: 0.35),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.warning_amber_outlined,
+            'Catatan Prop Drilling',
+            Text('Tahap 2', style: ts(12, color: Colors.black54)),
+            color: AppColors.warn,
+          ),
+          gap(10),
+          _bullet('State _favoriteCount dimiliki HomeDashboardPage dan harus dikirim ke setiap child yang membutuhkannya lewat constructor.'),
+          _bullet('Setiap child yang ingin mengubah nilai harus menerima callback dari parent (onIncrement / onDecrement), sehingga parameter constructor terus bertambah.'),
+          _bullet('Kalau ada child ketiga atau keempat yang butuh nilai yang sama, kita harus menambah constructor lagi — inilah prop drilling.'),
+          _bullet('Risiko duplikasi: jika suatu saat child menyimpan salinan _favoriteCount sendiri, nilai bisa tidak sinkron dengan parent.'),
+          _bullet('Solusinya bukan menghapus local state, tetapi mengangkat state ke pemilik yang tepat (lifting state up) dan nantinya memakai ValueNotifier/ChangeNotifier + Provider pada tahap berikutnya.'),
+        ]),
+      );
+
+  Widget _bullet(String text) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 4, right: 8),
+            child: Icon(Icons.circle, size: 6, color: AppColors.warn),
+          ),
+          Expanded(
+            child: Text(text,
+                style: ts(12, color: Colors.black87, height: 1.4)),
+          ),
+        ]),
+      );
 }
 
 class FavoriteSectionCard extends StatelessWidget {
@@ -732,6 +908,8 @@ class _HomeTabPage extends StatelessWidget {
         children: [
           const IdentityCard(),
           gap(),
+          const HomeDashboardPage(),
+          gap(),
           const MiniQuizCard(),
           gap(12),
           const FavoriteSectionCard(),
@@ -814,6 +992,8 @@ class _ProfileTabPage extends StatelessWidget {
         ),
         gap(),
         const StateClassificationCard(),
+        gap(),
+        const PropDrillingNoteCard(),
         gap(),
         ...section(
           'Informasi Mahasiswa',
