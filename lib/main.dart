@@ -31,6 +31,7 @@ final Future<Json> studentDataFuture = rootBundle
 final favorites = ValueNotifier<Set<String>>(<String>{});
 final quizScore = ValueNotifier<int?>(null);
 final courseFilter = ValueNotifier<String>('all');
+final favoriteCounter = ValueNotifier<int>(0);
 
 extension CourseX on Json {
   String str(String k, [String d = '-']) => this[k]?.toString() ?? d;
@@ -364,7 +365,7 @@ class InfoCard extends StatelessWidget {
       );
 }
 
-// ===== MINI QUIZ (contoh local state murni dengan setState) =====
+// ===== MINI QUIZ =====
 class MiniQuizCard extends StatefulWidget {
   const MiniQuizCard({super.key});
 
@@ -542,10 +543,16 @@ class StateClassificationCard extends StatelessWidget {
       'ValueNotifier',
     ),
     (
-      '_favoriteCount di HomeDashboardPage',
+      '_favoriteCount di HomeDashboardPageV3',
       'Local (SSOT)',
-      'Satu-satunya pemilik nilai. Child hanya menerima lewat constructor + callback. Contoh Single Source of Truth.',
+      'Contoh Single Source of Truth dengan setState + callback (Tahap 3).',
       'setState()',
+    ),
+    (
+      'favoriteCounter (ValueNotifier<int>)',
+      'Shared',
+      'Satu nilai yang bisa didengarkan banyak widget langsung tanpa constructor. Contoh pola listener (Tahap 4).',
+      'ValueNotifier',
     ),
   ];
 
@@ -602,14 +609,14 @@ class StateClassificationCard extends StatelessWidget {
   }
 }
 
-class HomeDashboardPage extends StatefulWidget {
-  const HomeDashboardPage({super.key});
+class HomeDashboardPageV3 extends StatefulWidget {
+  const HomeDashboardPageV3({super.key});
 
   @override
-  State<HomeDashboardPage> createState() => _HomeDashboardPageState();
+  State<HomeDashboardPageV3> createState() => _HomeDashboardPageV3State();
 }
 
-class _HomeDashboardPageState extends State<HomeDashboardPage> {
+class _HomeDashboardPageV3State extends State<HomeDashboardPageV3> {
   int _favoriteCount = 0;
 
   void _increment() => setState(() => _favoriteCount++);
@@ -626,23 +633,23 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         cardHeader(
           Icons.arrow_upward,
-          'Lifting State Up',
+          'Lifting State Up (setState)',
           Text('Tahap 3', style: ts(12, color: Colors.black54)),
           color: AppColors.warn,
         ),
         gap(10),
         hint(
-            'HomeDashboardPage memiliki _favoriteCount. Tiga child di bawah menerima nilai yang sama lewat constructor; hanya FavoriteTogglePanel yang juga mengirim aksi balik.'),
+            'Parent memiliki _favoriteCount. Tiga child menerima lewat constructor; satu child mengirim aksi lewat callback.'),
         gap(12),
         Row(children: [
           Expanded(
-            child: CourseSummaryTile(
+            child: CourseSummaryTileV3(
               favoriteCount: _favoriteCount,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: FavoriteTogglePanel(
+            child: FavoriteTogglePanelV3(
               favoriteCount: _favoriteCount,
               onIncrement: _increment,
               onDecrement: _decrement,
@@ -650,19 +657,19 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
           ),
         ]),
         gap(10),
-        DashboardStatusBar(favoriteCount: _favoriteCount),
+        DashboardStatusBarV3(favoriteCount: _favoriteCount),
         gap(10),
         hint(
-            'Ketiga child selalu menampilkan angka yang sama karena nilainya berasal dari satu sumber. Tidak ada duplikasi state.'),
+            'Ketiga child konsisten karena membaca dari satu sumber. Tetap butuh constructor + callback di setiap child.'),
       ]),
     );
   }
 }
 
-class CourseSummaryTile extends StatelessWidget {
+class CourseSummaryTileV3 extends StatelessWidget {
   final int favoriteCount;
 
-  const CourseSummaryTile({super.key, required this.favoriteCount});
+  const CourseSummaryTileV3({super.key, required this.favoriteCount});
 
   @override
   Widget build(BuildContext context) => Container(
@@ -690,12 +697,12 @@ class CourseSummaryTile extends StatelessWidget {
       );
 }
 
-class FavoriteTogglePanel extends StatelessWidget {
+class FavoriteTogglePanelV3 extends StatelessWidget {
   final int favoriteCount;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
 
-  const FavoriteTogglePanel({
+  const FavoriteTogglePanelV3({
     super.key,
     required this.favoriteCount,
     required this.onIncrement,
@@ -743,10 +750,10 @@ class FavoriteTogglePanel extends StatelessWidget {
       );
 }
 
-class DashboardStatusBar extends StatelessWidget {
+class DashboardStatusBarV3 extends StatelessWidget {
   final int favoriteCount;
 
-  const DashboardStatusBar({super.key, required this.favoriteCount});
+  const DashboardStatusBarV3({super.key, required this.favoriteCount});
 
   @override
   Widget build(BuildContext context) => Container(
@@ -771,6 +778,161 @@ class DashboardStatusBar extends StatelessWidget {
       );
 }
 
+class HomeDashboardPageV4 extends StatelessWidget {
+  const HomeDashboardPageV4({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.primary.withValues(alpha: 0.35),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        cardHeader(
+          Icons.notifications_active_outlined,
+          'ValueNotifier',
+          Text('Tahap 4', style: ts(12, color: Colors.black54)),
+          color: AppColors.primary,
+        ),
+        gap(10),
+        hint(
+            'Nilai disimpan di ValueNotifier<int> global. Tiga child mendengarkan langsung lewat ValueListenableBuilder tanpa constructor nilai.'),
+        gap(12),
+        Row(children: [
+          Expanded(child: CourseSummaryTileV4(counter: favoriteCounter)),
+          const SizedBox(width: 10),
+          Expanded(child: FavoriteTogglePanelV4(counter: favoriteCounter)),
+        ]),
+        gap(10),
+        DashboardStatusBarV4(counter: favoriteCounter),
+        gap(10),
+        hint(
+            'Menambah child baru cukup dengan satu ValueListenableBuilder — tidak perlu menambah constructor di parent.'),
+      ]),
+    );
+  }
+}
+
+class CourseSummaryTileV4 extends StatelessWidget {
+  final ValueNotifier<int> counter;
+
+  const CourseSummaryTileV4({super.key, required this.counter});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.summarize_outlined,
+                size: 18, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text('Ringkasan',
+                style: ts(12, w: FontWeight.bold, color: AppColors.primary)),
+          ]),
+          gap(6),
+          Text('Favorite saat ini:', style: ts(11, color: Colors.black54)),
+          ValueListenableBuilder<int>(
+            valueListenable: counter,
+            builder: (_, value, __) => Text('$value',
+                style:
+                    ts(22, w: FontWeight.bold, color: AppColors.primary)),
+          ),
+          gap(4),
+          hint('listen langsung'),
+        ]),
+      );
+}
+
+class FavoriteTogglePanelV4 extends StatelessWidget {
+  final ValueNotifier<int> counter;
+
+  const FavoriteTogglePanelV4({super.key, required this.counter});
+
+  void _increment() => counter.value = counter.value + 1;
+  void _decrement() {
+    if (counter.value == 0) return;
+    counter.value = counter.value - 1;
+  }
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.successSoft,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.success.withValues(alpha: 0.25)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            const Icon(Icons.tune, size: 18, color: AppColors.success),
+            const SizedBox(width: 6),
+            Text('Kontrol',
+                style: ts(12, w: FontWeight.bold, color: AppColors.success)),
+          ]),
+          gap(6),
+          ValueListenableBuilder<int>(
+            valueListenable: counter,
+            builder: (_, value, __) =>
+                hint('Nilai dibaca: $value'),
+          ),
+          gap(6),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _decrement,
+                style: outlined(AppColors.muted, pad: 8),
+                child: const Icon(Icons.remove, size: 16),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _increment,
+                style: filled(AppColors.success, pad: 8),
+                child: const Icon(Icons.add, size: 16),
+              ),
+            ),
+          ]),
+          gap(4),
+          hint('aksi langsung ke notifier'),
+        ]),
+      );
+}
+
+class DashboardStatusBarV4 extends StatelessWidget {
+  final ValueNotifier<int> counter;
+
+  const DashboardStatusBarV4({super.key, required this.counter});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: AppColors.bg,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(children: [
+          const Icon(Icons.info_outline, size: 16, color: AppColors.muted),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ValueListenableBuilder<int>(
+              valueListenable: counter,
+              builder: (_, value, __) => Text(
+                'Status: $value favorite aktif di dashboard',
+                style: ts(12, color: Colors.black87),
+              ),
+            ),
+          ),
+          Text('child ke-3',
+              style: ts(10, italic: FontStyle.italic, color: AppColors.muted)),
+        ]),
+      );
+}
 class PropDrillingNoteCard extends StatelessWidget {
   const PropDrillingNoteCard({super.key});
 
@@ -786,10 +948,9 @@ class PropDrillingNoteCard extends StatelessWidget {
           ),
           gap(10),
           _bullet('State _favoriteCount dimiliki HomeDashboardPage dan harus dikirim ke setiap child yang membutuhkannya lewat constructor.'),
-          _bullet('Setiap child yang ingin mengubah nilai harus menerima callback dari parent (onIncrement / onDecrement), sehingga parameter constructor terus bertambah.'),
+          _bullet('Setiap child yang ingin mengubah nilai harus menerima callback dari parent, sehingga parameter constructor terus bertambah.'),
           _bullet('Kalau ada child ketiga atau keempat yang butuh nilai yang sama, kita harus menambah constructor lagi — inilah prop drilling.'),
-          _bullet('Risiko duplikasi: jika suatu saat child menyimpan salinan _favoriteCount sendiri, nilai bisa tidak sinkron dengan parent.'),
-          _bullet('Solusinya bukan menghapus local state, tetapi mengangkat state ke pemilik yang tepat (lifting state up) dan nantinya memakai ValueNotifier/ChangeNotifier + Provider pada tahap berikutnya.'),
+          _bullet('Risiko duplikasi: jika suatu saat child menyimpan salinan nilainya sendiri, nilai bisa tidak sinkron dengan parent.'),
         ]),
       );
 
@@ -807,7 +968,6 @@ class PropDrillingNoteCard extends StatelessWidget {
         ]),
       );
 }
-
 class LiftingStateUpNoteCard extends StatelessWidget {
   const LiftingStateUpNoteCard({super.key});
 
@@ -824,8 +984,7 @@ class LiftingStateUpNoteCard extends StatelessWidget {
           _bullet('State _favoriteCount diangkat ke ancestor terdekat yang membutuhkannya, yaitu HomeDashboardPage.'),
           _bullet('HomeDashboardPage menjadi satu-satunya pemilik (Single Source of Truth). Tidak ada child yang menyimpan salinan nilai.'),
           _bullet('Tiga child menerima nilai yang sama lewat constructor: CourseSummaryTile, FavoriteTogglePanel, dan DashboardStatusBar.'),
-          _bullet('Hanya FavoriteTogglePanel yang juga menerima callback (onIncrement / onDecrement), karena hanya dia yang mengubah nilai.'),
-          _bullet('Karena semua child membaca dari sumber yang sama, nilai di ketiganya selalu konsisten tanpa perlu sinkronisasi manual.'),
+          _bullet('Hanya FavoriteTogglePanel yang juga menerima callback, karena hanya dia yang mengubah nilai.'),
         ]),
       );
 
@@ -840,6 +999,51 @@ class LiftingStateUpNoteCard extends StatelessWidget {
             child: Text(text,
                 style: ts(12, color: Colors.black87, height: 1.4)),
           ),
+        ]),
+      );
+}
+class ValueNotifierComparisonCard extends StatelessWidget {
+  const ValueNotifierComparisonCard({super.key});
+
+  @override
+  Widget build(BuildContext context) => AppCard(
+        borderColor: AppColors.primary.withValues(alpha: 0.35),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          cardHeader(
+            Icons.compare_arrows,
+            'Perbandingan setState vs ValueNotifier',
+            Text('Tahap 4', style: ts(12, color: Colors.black54)),
+            color: AppColors.primary,
+          ),
+          gap(10),
+          _row('Pemilik state', 'Widget (State class)', 'ValueNotifier<int> global'),
+          _row('Child menerima nilai lewat', 'Constructor (int)', 'ValueNotifier<int> (reference)'),
+          _row('Child mengubah nilai lewat', 'Callback dari parent', 'counter.value = ... langsung'),
+          _row('Rebuild dipicu oleh', 'setState() di parent', 'notifier.value berubah'),
+          _row('Rebuild terbatas pada', 'Seluruh subtree parent', 'Hanya ValueListenableBuilder'),
+          _row('Menambah child baru', 'Tambah constructor', 'Cukup bungkus dengan ValueListenableBuilder'),
+          _row('Cocok untuk', 'Local state kompleks', 'Nilai sederhana yang dipakai banyak widget'),
+          gap(6),
+          hint(
+              'Kesimpulan: ValueNotifier menyederhanakan prop drilling, tetapi masih global. Tahap 5 (ChangeNotifier) dan Tahap 6 (Provider) akan memindahkan notifier ke dalam widget tree.'),
+        ]),
+      );
+
+  Widget _row(String label, String v3, String v4) => Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: ts(11, w: FontWeight.bold, color: Colors.black87)),
+          const SizedBox(height: 2),
+          Row(children: [
+            Expanded(
+              child: Text('setState: $v3',
+                  style: ts(11, color: AppColors.warn, height: 1.3)),
+            ),
+            Expanded(
+              child: Text('Notifier: $v4',
+                  style: ts(11, color: AppColors.success, height: 1.3)),
+            ),
+          ]),
         ]),
       );
 }
@@ -978,7 +1182,9 @@ class _HomeTabPage extends StatelessWidget {
         children: [
           const IdentityCard(),
           gap(),
-          const HomeDashboardPage(),
+          const HomeDashboardPageV3(),
+          gap(),
+          const HomeDashboardPageV4(),
           gap(),
           const MiniQuizCard(),
           gap(12),
@@ -1066,6 +1272,8 @@ class _ProfileTabPage extends StatelessWidget {
         const PropDrillingNoteCard(),
         gap(),
         const LiftingStateUpNoteCard(),
+        gap(),
+        const ValueNotifierComparisonCard(),
         gap(),
         ...section(
           'Informasi Mahasiswa',
@@ -1214,7 +1422,7 @@ class _FilterBar extends StatelessWidget {
       );
 }
 
-// ===== COURSE CARD (Local state: show/hide deskripsi) =====
+// ===== COURSE CARD =====
 class CourseCard extends StatefulWidget {
   final Json course;
   final bool isFavorite;
@@ -1313,7 +1521,7 @@ class _CourseCardState extends State<CourseCard> {
   }
 }
 
-// ===== COURSE DETAIL (Local state: expand/collapse deskripsi) =====
+// ===== COURSE DETAIL =====
 class CourseDetailPage extends StatefulWidget {
   final Json course;
   final bool isFavorite;
