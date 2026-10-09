@@ -12,7 +12,6 @@ import '../widgets/identity_card.dart';
 import '../widgets/mini_quiz_card.dart';
 import '../widgets/status_helper.dart';
 import '../demos/tahap_5_6_7_demo.dart';
-import '../demos/tahap_11_demo.dart';
 import 'course_detail_page.dart';
 import 'demo_gallery_page.dart';
 
@@ -40,11 +39,11 @@ class _HomeTabPageState extends State<HomeTabPage> {
   Widget build(BuildContext context) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
-      
+          // 1. Identitas
           const IdentityCard(),
           gap(),
 
-         
+          // 2. Kartu statistik
           const FadeIn(
             delay: Duration(milliseconds: 120),
             slideOffset: 10,
@@ -52,7 +51,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
           ),
           gap(),
 
-          
+          // 3. Tombol demo
           const FadeIn(
             delay: Duration(milliseconds: 220),
             slideOffset: 10,
@@ -60,21 +59,17 @@ class _HomeTabPageState extends State<HomeTabPage> {
           ),
           gap(),
 
-          
-          const AsyncCoursesCard(),
-          gap(),
-
-         
+          // 4. Course terbaru
           sectionTitle('Course Terbaru'),
           gap(8),
           const _RecentCourses(),
           gap(),
 
-        
+          // 5. Favorite
           const FavoriteSectionCard(),
           gap(12),
 
-        
+          // 6. Mini quiz
           const MiniQuizCard(),
         ],
       );
@@ -88,8 +83,7 @@ class _StatsCard extends StatelessWidget {
     final provider = context.watch<CourseProvider>();
     final courses = provider.courses;
     final totalCourses = courses.length;
-    final totalCredits =
-        courses.fold<int>(0, (sum, c) => sum + c.credits);
+    final totalCredits = courses.fold<int>(0, (sum, c) => sum + c.credits);
     final favCount = provider.favoriteCount;
 
     return AppCard(
@@ -162,8 +156,7 @@ class _StatTile extends StatelessWidget {
         child: Column(children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 6),
-          Text(value,
-              style: ts(18, w: FontWeight.bold, color: color)),
+          Text(value, style: ts(18, w: FontWeight.bold, color: color)),
           const SizedBox(height: 2),
           Text(label,
               style: ts(11, color: Colors.black54),
@@ -172,7 +165,6 @@ class _StatTile extends StatelessWidget {
       );
 }
 
- 
 class _DemoButton extends StatelessWidget {
   const _DemoButton();
 
@@ -190,8 +182,8 @@ class _DemoButton extends StatelessWidget {
               ],
             ),
             borderRadius: BorderRadius.circular(14),
-            border:
-                Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
+            border: Border.all(
+                color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
           ),
           child: Row(children: [
             Container(
@@ -209,8 +201,7 @@ class _DemoButton extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Lihat Demo Tahap 2–11',
-                      style:
-                          ts(14, w: FontWeight.bold, color: Colors.black)),
+                      style: ts(14, w: FontWeight.bold, color: Colors.black)),
                   const SizedBox(height: 2),
                   Text(
                     'Perjalanan pembelajaran state management dan architecture',
@@ -239,9 +230,7 @@ class _RecentCourses extends StatelessWidget {
     }
     final recent = provider.courses.take(3).toList();
     if (recent.isEmpty) {
-      return AppCard(
-        child: hint('Belum ada course.'),
-      );
+      return AppCard(child: hint('Belum ada course.'));
     }
     return Column(children: [
       for (final c in recent)

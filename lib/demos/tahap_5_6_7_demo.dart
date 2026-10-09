@@ -9,7 +9,6 @@ import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../screens/course_detail_page.dart';
 
-// ===== TAHAP 6 =====
 class ChangeNotifierDemoCard extends StatelessWidget {
   const ChangeNotifierDemoCard({super.key});
 
@@ -105,7 +104,6 @@ class ChangeNotifierDemoCard extends StatelessWidget {
       );
 }
 
-// ===== TAHAP 7 =====
 class WatchReadConsumerDemoCard extends StatelessWidget {
   const WatchReadConsumerDemoCard({super.key});
 
@@ -235,7 +233,6 @@ class ConsumerOnlyCounterTile extends StatelessWidget {
       );
 }
 
-// ===== FAVORITE SECTION — baca dari provider, tampilkan Course typed =====
 class FavoriteSectionCard extends StatelessWidget {
   const FavoriteSectionCard({super.key});
 

@@ -62,7 +62,6 @@ class _CourseCardState extends State<CourseCard>
       setState(() => _showDescription = !_showDescription);
 
   void _onFavoriteTapped() {
-    // Jalankan animasi scale singkat.
     _favAnimController.forward(from: 0);
     widget.onToggleFavorite?.call();
   }
