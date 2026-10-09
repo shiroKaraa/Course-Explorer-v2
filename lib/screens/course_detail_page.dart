@@ -1,0 +1,144 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
+import '../core/app_colors.dart';
+import '../core/legacy_globals.dart';
+import '../core/ui_helpers.dart';
+import '../widgets/app_card.dart';
+import '../widgets/demo_scaffold.dart';
+import '../widgets/identity_card.dart';
+import '../widgets/info_card.dart';
+import '../widgets/scroll_page.dart';
+import '../widgets/status_helper.dart';
+
+class CourseDetailPage extends StatefulWidget {
+  final Json course;
+  final bool isFavorite;
+
+  const CourseDetailPage({super.key, required this.course, this.isFavorite = false});
+
+  @override
+  State<CourseDetailPage> createState() => _CourseDetailPageState();
+}
+
+class _CourseDetailPageState extends State<CourseDetailPage> {
+  bool _showFullDescription = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final course = widget.course;
+    final status = course.status;
+    final color = StatusHelper.color(status);
+    final credits = course.str('credits');
+    final progress = StatusHelper.progressOf(status);
+    final code = course.str('code');
+    final desc = course.str('description', 'Tidak ada deskripsi.');
+
+    return DemoScaffold(
+      body: ScrollPage([
+        AppCard(
+          padding: const EdgeInsets.all(16),
+          borderColor: color.withValues(alpha: 0.4),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Icon(StatusHelper.icon(status), color: color, size: 28),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text(course.title,
+                      style: ts(18, w: FontWeight.bold))),
+            ]),
+            gap(10),
+            Row(children: [
+              Text('$code • $credits SKS', style: ts(13, color: Colors.black54)),
+              const Spacer(),
+              StatusHelper.badge(status),
+            ]),
+            gap(14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor: AppColors.border,
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.success),
+              ),
+            ),
+            gap(6),
+            Row(children: [
+              const Icon(Icons.trending_up, size: 14, color: AppColors.success),
+              const SizedBox(width: 6),
+              Text('Progress: ${(progress * 100).round()}%',
+                  style:
+                      ts(12, w: FontWeight.w600, color: AppColors.success)),
+            ]),
+          ]),
+        ),
+        gap(),
+        ...section(
+          'Deskripsi',
+          AppCard(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 200),
+                crossFadeState: _showFullDescription
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                firstChild: Text(desc,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ts(13, height: 1.5)),
+                secondChild: Text(desc, style: ts(13, height: 1.5)),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => setState(
+                      () => _showFullDescription = !_showFullDescription),
+                  icon: Icon(
+                    _showFullDescription
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 18,
+                  ),
+                  label: Text(_showFullDescription
+                      ? 'Sembunyikan'
+                      : 'Selengkapnya'),
+                ),
+              ),
+            ]),
+          ),
+        ),
+        ...section(
+          'Informasi Course',
+          InfoCard([
+            InfoRow(Icons.tag, 'Kode', code),
+            InfoRow(Icons.credit_card, 'SKS', '$credits SKS'),
+            InfoRow(Icons.person, 'Dosen', course.str('dosen')),
+            InfoRow(Icons.info_outline, 'Status', StatusHelper.label(status)),
+          ]),
+        ),
+        ...section('Identitas Mahasiswa', const IdentityCard()),
+        OutlinedButton.icon(
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: code));
+            if (!context.mounted) return;
+            showMsg(context, 'Kode course "$code" disalin.');
+          },
+          icon: const Icon(Icons.copy, size: 18),
+          label: const Text('Salin Kode Course'),
+          style: outlined(AppColors.primary),
+        ),
+        gap(10),
+        ElevatedButton.icon(
+          onPressed: () => Navigator.pop(context, !widget.isFavorite),
+          icon: Icon(widget.isFavorite ? Icons.star_border : Icons.star, size: 18),
+          label: Text(widget.isFavorite
+              ? 'Hapus dari Favorite & Kembali'
+              : 'Tandai Favorite & Kembali'),
+          style: filled(widget.isFavorite ? AppColors.muted : AppColors.success),
+        ),
+      ]),
+    );
+  }
+}

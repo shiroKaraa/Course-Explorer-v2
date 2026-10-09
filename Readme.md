@@ -51,3 +51,8 @@ Saya membuat CourseRepository sebagai kontrak pengambilan data dan CourseReposit
 Tahap 11 : Provider untuk Async State
 
 Saya mengembangkan CourseProvider untuk mengelola data course, status loading, dan error menggunakan CourseRepository. Method loadCourses() mengatur proses pemuatan data dan memperbarui UI melalui notifyListeners(). Saya juga menambahkan kartu demo di Home untuk menampilkan loading, data, atau pesan error dengan tombol Retry. Dari tahap ini, saya memahami bahwa async state dapat dikelola secara terpusat dan digunakan di beberapa halaman tanpa perlu membuat FutureBuilder terpisah.
+
+Tahap 12 : Refactor Struktur Folder
+
+Pada tahap ini, saya merapikan struktur folder dengan menerapkan separation of concerns. File main.dart berhasil dipangkas dari 2.967 baris menjadi sekitar 40 baris, sedangkan class lainnya dipindahkan ke folder sesuai tanggung jawabnya. Setelah import diperbaiki, aplikasi tetap berjalan seperti sebelumnya. Saya juga menemukan masih ada dua sumber state favorites, yaitu ValueNotifier lama dan CourseProvider, yang akan disatukan pada tahap berikutnya.
+
