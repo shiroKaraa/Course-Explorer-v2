@@ -163,7 +163,6 @@ class _HeaderCard extends StatelessWidget {
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Column(children: [
-          // Logo Undiksha
           Container(
             width: 90,
             height: 90,

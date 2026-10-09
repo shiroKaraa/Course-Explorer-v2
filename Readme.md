@@ -258,3 +258,8 @@ Saya menyelesaikan integrasi utama Course Explorer v2 dan membuat commit yang me
 
 Fitur utama telah diperiksa melalui checklist, termasuk identity, favorites, search, filter, async state, dan navigasi. Tahap 14-H bukan akhir pengembangan, melainkan penutup tahap integrasi awal. Selanjutnya, proyek akan memasuki tahap Debugging untuk memperbaiki bug dan melakukan penyesuaian atau penambahan fitur jika diperlukan, sebelum melanjutkan ke Audit Architecture.
 
+Tahap 14 (DEBUGING) :
+
+Pada tahap ini saya menyelesaikan Mini Project Integrasi Course Explorer v2 dengan menggabungkan layer yang telah dibangun dari Tahap 1–13. Semua screen utama kini mengambil data dari CourseProvider dan mengikuti alur Provider → Repository → Service → Data Source. Saya juga memigrasi CourseCard dan CourseDetailPage dari Json (Map) ke model Course bertipe jelas.
+
+Saya menambahkan penanganan kondisi loading, error, dan success, serta fitur search, kartu statistik, aksen emas, dan animasi halus. Selain itu, saya memperbaiki beberapa masalah UI, seperti judul AppBar ganda, penempatan AsyncCoursesCard, state tab yang ter-reset, dan duplikasi widget gallery. Dengan demikian, struktur dan tampilan aplikasi menjadi lebih konsisten serta siap memasuki tahap debugging dan audit arsitektur.

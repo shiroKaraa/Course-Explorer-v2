@@ -7,7 +7,6 @@ import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
-import '../widgets/demo_scaffold.dart';
 import '../widgets/identity_card.dart';
 import 'course_detail_page.dart';
 
@@ -34,9 +33,7 @@ bool _matchesSearch(String query, Course c) {
 }
 
 class CourseGridPage extends StatefulWidget {
-  final bool standalone;
-
-  const CourseGridPage({super.key, this.standalone = false});
+  const CourseGridPage({super.key});
 
   @override
   State<CourseGridPage> createState() => _CourseGridPageState();
@@ -77,27 +74,25 @@ class _CourseGridPageState extends State<CourseGridPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
 
-    return DemoScaffold(
-      body: Column(children: [
-        const Padding(
-          padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: IdentityCard(
-            subtitle: 'Pendidikan Teknik Informatika • Semester 5',
-          ),
+    return Column(children: [
+      const Padding(
+        padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: IdentityCard(
+          subtitle: 'Pendidikan Teknik Informatika • Semester 5',
         ),
+      ),
 
-        _SearchBar(
-          controller: _searchController,
-          query: _searchQuery,
-          onChanged: _onSearchChanged,
-          onClear: _clearSearch,
-        ),
+      _SearchBar(
+        controller: _searchController,
+        query: _searchQuery,
+        onChanged: _onSearchChanged,
+        onClear: _clearSearch,
+      ),
 
-        const _FilterBar(),
+      const _FilterBar(),
 
-        Expanded(child: _body(context, provider)),
-      ]),
-    );
+      Expanded(child: _body(context, provider)),
+    ]);
   }
 
   Widget _body(BuildContext context, CourseProvider provider) {
@@ -272,18 +267,15 @@ class _SearchBar extends StatelessWidget {
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: AppColors.border, width: 1),
+              borderSide: BorderSide(color: AppColors.border, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: AppColors.border, width: 1),
+              borderSide: BorderSide(color: AppColors.border, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  BorderSide(color: AppColors.primary, width: 1.5),
+              borderSide: BorderSide(color: AppColors.primary, width: 1.5),
             ),
           ),
         ),

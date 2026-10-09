@@ -7,13 +7,10 @@ import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/course_card.dart';
-import '../widgets/demo_scaffold.dart';
 import 'course_detail_page.dart';
 
 class FavoritesPage extends StatefulWidget {
-  final bool standalone;
-
-  const FavoritesPage({super.key, this.standalone = false});
+  const FavoritesPage({super.key});
 
   @override
   State<FavoritesPage> createState() => _FavoritesPageState();
@@ -36,15 +33,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
 
-    return DemoScaffold(
-      body: Column(children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: _SummaryHeader(count: provider.favoriteCount),
-        ),
-        Expanded(child: _body(context, provider)),
-      ]),
-    );
+    return Column(children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+        child: _SummaryHeader(count: provider.favoriteCount),
+      ),
+      Expanded(child: _body(context, provider)),
+    ]);
   }
 
   Widget _body(BuildContext context, CourseProvider provider) {
