@@ -16,10 +16,32 @@ class CourseSupabaseService implements CourseDataSource {
         .map((e) => Course.fromJson(e as Map<String, dynamic>))
         .toList();
   }
-  
+
   @override
-  Future<Course> createCourse(Course course) {
-    throw UnimplementedError('Akan diimplementasikan di Tahap 13');
+  Future<Course> createCourse(Course course) async {
+    final insertData = {
+      'code': course.code,
+      'title': course.title,
+      'credits': course.credits,
+      'status': course.status,
+      'description': course.description,
+      'dosen': course.dosen,
+    };
+
+    try {
+      final data = await _supabase
+          .from('courses')
+          .insert(insertData)
+          .select()
+          .single();
+
+      return Course.fromJson(data);
+    } on PostgrestException catch (e) {
+      if (e.code == '23505') { 
+        throw Exception('Kode course "${course.code}" sudah digunakan.');
+      }
+      throw Exception('Database error: ${e.message}');
+    }
   }
 
   @override
