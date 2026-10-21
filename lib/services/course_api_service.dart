@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
 import 'course_data_source.dart';
@@ -82,10 +83,12 @@ class CourseApiService implements CourseDataSource {
         );
 
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          print('PUT /posts/$id → HTTP ${response.statusCode} (diabaikan)');
+          debugPrint(
+            'PUT /posts/$id → HTTP ${response.statusCode} (diabaikan)',
+          );
         }
       } catch (e) {
-        print('PUT /posts/$id gagal: $e (diabaikan)');
+        debugPrint('PUT /posts/$id gagal: $e (diabaikan)');
       }
     }
 
@@ -103,10 +106,12 @@ class CourseApiService implements CourseDataSource {
       try {
         final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          print('DELETE /posts/$id → HTTP ${response.statusCode} (diabaikan)');
+          debugPrint(
+            'DELETE /posts/$id → HTTP ${response.statusCode} (diabaikan)',
+          );
         }
       } catch (e) {
-        print('DELETE /posts/$id gagal: $e (diabaikan)');
+        debugPrint('DELETE /posts/$id gagal: $e (diabaikan)');
       }
     }
 
