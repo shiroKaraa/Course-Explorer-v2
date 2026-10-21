@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../repositories/course_repository.dart';
-import '../services/course_service.dart';
 import 'app_colors.dart';
 import 'di.dart';
 
 final quizScore = ValueNotifier<int?>(null);
 final courseFilter = ValueNotifier<String>('all');
 
-final CourseService courseService = DI.courseService;
 final CourseRepository courseRepository = DI.courseRepository;
 
 void go(BuildContext c, Widget page) =>

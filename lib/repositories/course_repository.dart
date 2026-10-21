@@ -1,21 +1,15 @@
 import '../models/course.dart';
-import '../services/course_service.dart';
+import '../services/course_api_service.dart';
 
 abstract class CourseRepository {
   Future<List<Course>> getCourses();
-
-
-  Future<Map<String, dynamic>> getStudent();
 }
 
 class CourseRepositoryImpl implements CourseRepository {
-  final CourseService _service;
+  final CourseApiService _apiService; 
 
-  CourseRepositoryImpl(this._service);
-
-  @override
-  Future<List<Course>> getCourses() => _service.loadCourses();
+  CourseRepositoryImpl(this._apiService);
 
   @override
-  Future<Map<String, dynamic>> getStudent() => _service.loadStudent();
+  Future<List<Course>> getCourses() => _apiService.getCourses(); 
 }
