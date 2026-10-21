@@ -288,14 +288,14 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<String>(
         valueListenable: courseFilter,
-        builder: (_, active, __) => SizedBox(
+        builder: (_, active, _) => SizedBox(   // ← (_, __) jadi (_, _)
           height: 44,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             itemCount: _filterOptions.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (_, i) {
+            separatorBuilder: (_, _) => const SizedBox(width: 8),  // ← FIXED
+            itemBuilder: (_, i) {                                   // ← FIXED
               final (key, label, icon) = _filterOptions[i];
               final selected = active == key;
               return ChoiceChip(

@@ -27,7 +27,7 @@ class IdentityCard extends StatelessWidget {
                   width: 52,
                   height: 52,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.person,
+                  errorBuilder: (_, _, _) => const Icon(Icons.person,
                       size: 30, color: AppColors.primary),
                 ),
               ),

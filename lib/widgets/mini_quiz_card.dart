@@ -25,20 +25,26 @@ class _MiniQuizCardState extends State<MiniQuizCard> {
     });
   }
 
-  void _next() => setState(() {
-        if (_index < quizQuestions.length - 1) {
-          _index++;
-          _selected = null;
-        } else {
-          _finished = true;
-          quizScore.value = _score;
-        }
+  void _next() {
+    if (_index < quizQuestions.length - 1) {
+      setState(() {
+        _index++;
+        _selected = null;
       });
+    } else {
+      final finalScore = _score;
+      setState(() {
+        _finished = true;
+      });
+      quizScore.value = finalScore;
+    }
+  }
 
   void _reset() => setState(() {
         _index = _score = 0;
         _selected = null;
         _finished = false;
+        quizScore.value = null;
       });
 
   @override

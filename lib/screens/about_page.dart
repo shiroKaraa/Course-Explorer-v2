@@ -185,7 +185,7 @@ class _HeaderCard extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/logo_undiksha.png',
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (_, _, _) => const Icon(
                     Icons.school,
                     size: 48,
                     color: AppColors.primary,

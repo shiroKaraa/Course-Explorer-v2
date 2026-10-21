@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../core/app_colors.dart';
-import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
-import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/fade_in.dart';
+import '../widgets/favorite_section_card.dart';
 import '../widgets/identity_card.dart';
 import '../widgets/mini_quiz_card.dart';
 import '../widgets/status_helper.dart';
-import '../demos/tahap_5_6_7_demo.dart';
 import 'course_detail_page.dart';
-import 'demo_gallery_page.dart';
-import 'package:course_explorer_v2/widgets/debug_mounted_demo.dart'; 
 
 class HomeTabPage extends StatefulWidget {
   const HomeTabPage({super.key});
@@ -40,41 +36,21 @@ class _HomeTabPageState extends State<HomeTabPage> {
   Widget build(BuildContext context) => ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // 1. Identitas
           const IdentityCard(),
           gap(),
-
-          // 2. Kartu statistik
           const FadeIn(
             delay: Duration(milliseconds: 120),
             slideOffset: 10,
             child: _StatsCard(),
           ),
           gap(),
-
-          // 3. Tombol demo
-          const FadeIn(
-            delay: Duration(milliseconds: 220),
-            slideOffset: 10,
-            child: _DemoButton(),
-          ),
-          gap(),
-
-          // 4. Course terbaru
           sectionTitle('Course Terbaru'),
           gap(8),
           const _RecentCourses(),
           gap(),
-
-          // 5. Favorite
           const FavoriteSectionCard(),
           gap(12),
-
-          // 6. Mini quiz
           const MiniQuizCard(),
-          gap(12),
-
-          const DebugMountedDemo(),
         ],
       );
 }
@@ -166,57 +142,6 @@ class _StatTile extends StatelessWidget {
               style: ts(11, color: Colors.black54),
               textAlign: TextAlign.center),
         ]),
-      );
-}
-
-class _DemoButton extends StatelessWidget {
-  const _DemoButton();
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: () => go(context, const DemoGalleryPage()),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.gold.withValues(alpha: 0.15),
-                AppColors.goldSoft,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
-          ),
-          child: Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.gold,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.collections_bookmark_outlined,
-                  color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Lihat Demo Tahap 2–11',
-                      style: ts(14, w: FontWeight.bold, color: Colors.black)),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Perjalanan pembelajaran state management dan architecture',
-                    style: ts(11, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: AppColors.gold, size: 24),
-          ]),
-        ),
       );
 }
 

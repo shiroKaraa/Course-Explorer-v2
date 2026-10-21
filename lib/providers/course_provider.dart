@@ -7,13 +7,11 @@ class CourseProvider extends ChangeNotifier {
 
   CourseProvider(this._repository);
 
-
+  // ===== FAVORITES =====
   final Set<String> _favorites = <String>{};
 
   Set<String> get favorites => Set.unmodifiable(_favorites);
-
   int get favoriteCount => _favorites.length;
-
   bool isFavorite(String code) => _favorites.contains(code);
 
   void toggleFavorite(String code) {
@@ -25,26 +23,18 @@ class CourseProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFavorite(String code, bool value) {
-    if (value) {
-      _favorites.add(code);
-    } else {
-      _favorites.remove(code);
-    }
-    notifyListeners();
-  }
-
   void clearFavorites() {
     if (_favorites.isEmpty) return;
     _favorites.clear();
     notifyListeners();
   }
 
-
+  // ===== ASYNC COURSES =====
   List<Course> _courses = const [];
   bool _isLoading = false;
   String? _error;
   bool _hasLoaded = false;
+  Future<void>? _inFlightLoad;
 
   List<Course> get courses => List.unmodifiable(_courses);
   bool get isLoading => _isLoading;
@@ -58,9 +48,15 @@ class CourseProvider extends ChangeNotifier {
     return 'initial';
   }
 
-  Future<void> loadCourses() async {
-    if (_isLoading) return;
+  Future<void> loadCourses() {
+    // Dedupe: kalau sudah ada load berjalan, kembalikan future yang sama.
+    if (_inFlightLoad != null) return _inFlightLoad!;
 
+    _inFlightLoad = _doLoad();
+    return _inFlightLoad!.whenComplete(() => _inFlightLoad = null);
+  }
+
+  Future<void> _doLoad() async {
     _isLoading = true;
     _error = null;
     notifyListeners();

@@ -3,15 +3,14 @@ import 'package:provider/provider.dart';
 
 import '../core/app_colors.dart';
 import '../core/app_strings.dart';
-import '../core/legacy_globals.dart';
+import '../core/legacy_globals.dart' show go, quizScore;
 import '../core/ui_helpers.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
+import '../widgets/favorite_section_card.dart';
 import '../widgets/identity_card.dart';
 import '../widgets/info_card.dart';
 import '../widgets/scroll_page.dart';
-import '../demos/tahap_5_6_7_demo.dart';
-import 'notes_gallery_page.dart';
 import 'about_page.dart';
 
 class ProfileTabPage extends StatelessWidget {
@@ -21,7 +20,6 @@ class ProfileTabPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
     return ScrollPage([
-
       const IdentityCard(
           subtitle: 'Pendidikan Teknik Informatika • Semester 5'),
       gap(),
@@ -31,9 +29,15 @@ class ProfileTabPage extends StatelessWidget {
         _StatTile(Icons.star_outline, 'Favorite', '${provider.favoriteCount}',
             color: AppColors.gold),
         const SizedBox(width: 10),
-        _StatTile(Icons.emoji_events_outlined, 'Quiz',
-            quizScore.value?.toString() ?? '-',
-            color: AppColors.warn),
+        ValueListenableBuilder<int?>(
+          valueListenable: quizScore,
+          builder: (_, score, _) => _StatTile(
+            Icons.emoji_events_outlined,
+            'Quiz',
+            score?.toString() ?? '-',
+            color: AppColors.warn,
+          ),
+        ),
       ]),
       gap(),
       ...section(
@@ -51,8 +55,6 @@ class ProfileTabPage extends StatelessWidget {
         'About Me',
         AppCard(child: hint('Mahasiswa Pendidikan Teknik Informatika')),
       ),
-      const _NotesButton(),
-      gap(10),
       const _AboutButton(),
       gap(),
       ...section('Daftar Favorite', const FavoriteSectionCard()),
@@ -78,59 +80,6 @@ class _StatTile extends StatelessWidget {
             Text(value, style: ts(18, w: FontWeight.bold, color: color)),
             const SizedBox(height: 2),
             Text(label, style: ts(12, color: Colors.black54)),
-          ]),
-        ),
-      );
-}
-
-
-class _NotesButton extends StatelessWidget {
-  const _NotesButton();
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: () => go(context, const NotesGalleryPage()),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.gold.withValues(alpha: 0.15),
-                AppColors.goldSoft,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.5), width: 1.5),
-          ),
-          child: Row(children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.gold,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.menu_book_outlined,
-                  color: Colors.white, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Lihat Catatan Tahapan',
-                      style:
-                          ts(14, w: FontWeight.bold, color: Colors.black)),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Perbandingan konsep dari setiap tahap',
-                    style: ts(11, color: Colors.black54),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right, color: AppColors.gold, size: 24),
           ]),
         ),
       );
