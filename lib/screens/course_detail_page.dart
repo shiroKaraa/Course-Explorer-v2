@@ -8,6 +8,7 @@ import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
+import '../widgets/course_form_dialog.dart';
 import '../widgets/demo_scaffold.dart';
 import '../widgets/identity_card.dart';
 import '../widgets/info_card.dart';
@@ -30,11 +31,30 @@ class CourseDetailPage extends StatefulWidget {
 class _CourseDetailPageState extends State<CourseDetailPage> {
   bool _showFullDescription = false;
 
+  Future<void> _showEditDialog(Course current) async {
+    final updated = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => CourseFormDialog(initialCourse: current),
+    );
+
+    if (!mounted) return;
+    if (updated == true) {
+      showMsg(context, 'Course berhasil diperbarui!', color: AppColors.success);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final course = widget.course;
-    final code = course.code;
     final provider = context.watch<CourseProvider>();
+
+    final course = provider.findCourse(
+          id: widget.course.id,
+          code: widget.course.code,
+        ) ??
+        widget.course;
+
+    final code = course.code;
     final isFavorite = provider.isFavorite(code);
     final status = course.status;
     final color = StatusHelper.color(status);
@@ -42,6 +62,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     final desc = course.description.isEmpty
         ? 'Tidak ada deskripsi.'
         : course.description;
+
+    final canEdit = course.id != null;
 
     return DemoScaffold(
       body: ScrollPage([
@@ -53,8 +75,16 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
               Icon(StatusHelper.icon(status), color: color, size: 28),
               const SizedBox(width: 10),
               Expanded(
-                  child: Text(course.title,
-                      style: ts(18, w: FontWeight.bold))),
+                child: Text(course.title,
+                    style: ts(18, w: FontWeight.bold)),
+              ),
+              if (canEdit)
+                IconButton(
+                  onPressed: () => _showEditDialog(course),
+                  icon: const Icon(Icons.edit_outlined,
+                      color: AppColors.primary),
+                  tooltip: 'Edit Course',
+                ),
             ]),
             gap(10),
             Row(children: [
@@ -75,7 +105,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             ),
             gap(6),
             Row(children: [
-              const Icon(Icons.trending_up, size: 14, color: AppColors.success),
+              const Icon(Icons.trending_up,
+                  size: 14, color: AppColors.success),
               const SizedBox(width: 6),
               Text('Progress: ${(progress * 100).round()}%',
                   style:
@@ -87,36 +118,39 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         ...section(
           'Deskripsi',
           AppCard(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 200),
-                crossFadeState: _showFullDescription
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                firstChild: Text(desc,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ts(13, height: 1.5)),
-                secondChild: Text(desc, style: ts(13, height: 1.5)),
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () => setState(
-                      () => _showFullDescription = !_showFullDescription),
-                  icon: Icon(
-                    _showFullDescription
-                        ? Icons.expand_less
-                        : Icons.expand_more,
-                    size: 18,
-                  ),
-                  label: Text(_showFullDescription
-                      ? 'Sembunyikan'
-                      : 'Selengkapnya'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 200),
+                  crossFadeState: _showFullDescription
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  firstChild: Text(desc,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ts(13, height: 1.5)),
+                  secondChild: Text(desc, style: ts(13, height: 1.5)),
                 ),
-              ),
-            ]),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => setState(
+                        () => _showFullDescription = !_showFullDescription),
+                    icon: Icon(
+                      _showFullDescription
+                          ? Icons.expand_less
+                          : Icons.expand_more,
+                      size: 18,
+                    ),
+                    label: Text(
+                      _showFullDescription ? 'Sembunyikan' : 'Selengkapnya',
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         ...section(
@@ -152,9 +186,9 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
             );
           },
           icon: Icon(isFavorite ? Icons.star : Icons.star_border, size: 18),
-          label: Text(isFavorite
-              ? 'Hapus dari Favorite'
-              : 'Tandai sebagai Favorite'),
+          label: Text(
+            isFavorite ? 'Hapus dari Favorite' : 'Tandai sebagai Favorite',
+          ),
           style: filled(isFavorite ? AppColors.muted : AppColors.success),
         ),
       ]),

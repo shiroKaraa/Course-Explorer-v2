@@ -80,7 +80,7 @@ class CourseProvider extends ChangeNotifier {
     await loadCourses();
   }
 
-  // ===== TAMBAHAN TAHAP 6 =====
+  // ===== CREATE =====
   bool _isSaving = false;
   bool get isSaving => _isSaving;
 
@@ -92,16 +92,10 @@ class CourseProvider extends ChangeNotifier {
     try {
       final created = await _repository.createCourse(course);
 
-      // Optimistic insert: langsung tampilkan di list tanpa menunggu GET.
-      // Ini penting karena JSONPlaceholder tidak menyimpan POST.
       _courses = [created, ..._courses];
       _hasLoaded = true;
       _error = null;
       notifyListeners();
-
-      // (Opsional) Sinkronisasi ulang dengan server.
-      // Kalau ingin lebih hemat, baris ini bisa dihapus.
-      // await refresh();
 
       return true;
     } catch (e) {
@@ -112,5 +106,50 @@ class CourseProvider extends ChangeNotifier {
       _isSaving = false;
       notifyListeners();
     }
+  }
+
+  // ===== UPDATE =====
+  Future<bool> editCourse(Course updatedCourse) async {
+    if (_isSaving) return false;
+    if (updatedCourse.id == null) {
+      _error = 'ID Course tidak ditemukan untuk update.';
+      notifyListeners();
+      return false;
+    }
+
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.updateCourse(updatedCourse.id!, updatedCourse);
+
+      final index =
+          _courses.indexWhere((c) => c.id == updatedCourse.id);
+      if (index != -1) {
+        final newList = List<Course>.from(_courses);
+        newList[index] = updatedCourse;
+        _courses = newList;
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
+
+  Course? findCourse({int? id, String? code}) {
+    for (final c in _courses) {
+      if (id != null && c.id == id) return c;
+      if (code != null && c.code == code) return c;
+    }
+    return null;
   }
 }

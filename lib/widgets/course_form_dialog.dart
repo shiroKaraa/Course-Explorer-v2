@@ -7,7 +7,9 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 
 class CourseFormDialog extends StatefulWidget {
-  const CourseFormDialog({super.key});
+  final Course? initialCourse; 
+
+  const CourseFormDialog({super.key, this.initialCourse});
 
   @override
   State<CourseFormDialog> createState() => _CourseFormDialogState();
@@ -15,10 +17,22 @@ class CourseFormDialog extends StatefulWidget {
 
 class _CourseFormDialogState extends State<CourseFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _codeCtrl = TextEditingController();
-  final _titleCtrl = TextEditingController();
-  final _creditsCtrl = TextEditingController();
-  String _status = 'planned';
+  late TextEditingController _codeCtrl;
+  late TextEditingController _titleCtrl;
+  late TextEditingController _creditsCtrl;
+  late String _status;
+
+  bool get isEditMode => widget.initialCourse != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.initialCourse;
+    _codeCtrl = TextEditingController(text: c?.code ?? '');
+    _titleCtrl = TextEditingController(text: c?.title ?? '');
+    _creditsCtrl = TextEditingController(text: c?.credits.toString() ?? '');
+    _status = c?.status ?? 'planned';
+  }
 
   @override
   void dispose() {
@@ -32,19 +46,23 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     final course = Course(
+      id: widget.initialCourse?.id, 
       code: _codeCtrl.text.trim(),
       title: _titleCtrl.text.trim(),
       credits: int.tryParse(_creditsCtrl.text.trim()) ?? 0,
       status: _status,
+      description: widget.initialCourse?.description ?? '', 
     );
 
     final provider = context.read<CourseProvider>();
-    final ok = await provider.addCourse(course);
+    final ok = isEditMode 
+        ? await provider.editCourse(course)
+        : await provider.addCourse(course);
 
     if (!mounted) return;
 
     if (ok) {
-      Navigator.pop(context, true);   // ← return true ke pemanggil
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -60,7 +78,7 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     final isSaving = context.watch<CourseProvider>().isSaving;
 
     return AlertDialog(
-      title: const Text('Tambah Course'),
+      title: Text(isEditMode ? 'Edit Course' : 'Tambah Course'),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -69,7 +87,12 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
             children: [
               TextFormField(
                 controller: _codeCtrl,
-                decoration: const InputDecoration(labelText: 'Kode (misal: MOB01)'),
+                readOnly: isEditMode, 
+                decoration: InputDecoration(
+                  labelText: 'Kode (misal: MOB01)',
+                  fillColor: isEditMode ? Colors.grey.shade200 : null,
+                  filled: isEditMode,
+                ),
                 validator: (v) => v!.trim().isEmpty ? 'Wajib diisi' : null,
               ),
               gap(10),

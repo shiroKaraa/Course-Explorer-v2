@@ -7,9 +7,6 @@ class CourseApiService {
 
   CourseApiService(this.baseUrl);
 
-  /// Cache lokal untuk course yang dibuat lewat POST.
-  /// JSONPlaceholder TIDAK menyimpan data baru, jadi kita simpan
-  /// sendiri agar tetap muncul setelah refresh().
   final List<Course> _createdCourses = [];
 
   Future<List<Course>> getCourses() async {
@@ -24,8 +21,6 @@ class CourseApiService {
         .map((e) => Course.fromJson(e as Map<String, dynamic>))
         .toList(growable: false);
 
-    // Gabungkan: course yang baru dibuat (cache lokal) + data dari server.
-    // Course lokal diletakkan di depan agar mudah terlihat.
     return [..._createdCourses.reversed, ...remote];
   }
 
@@ -37,7 +32,6 @@ class CourseApiService {
         'title': course.title,
         'body': course.description,
         'userId': 1,
-        // Kirim juga code & credits untuk dokumentasi (diabaikan server)
         'code': course.code,
         'credits': course.credits,
         'status': course.status,
@@ -50,21 +44,54 @@ class CourseApiService {
 
     final Map<String, dynamic> data = jsonDecode(response.body);
 
-    // Bangun Course final: pertahankan field dari FORM (code, credits, status),
-    // hanya ambil id dari server.
     final created = Course(
       id: data['id'] as int?,
-      code: course.code,           // ← dari form, bukan generate
-      title: course.title,          // ← dari form
-      credits: course.credits,      // ← dari form
-      status: course.status,        // ← dari form
+      code: course.code,
+      title: course.title,
+      credits: course.credits,
+      status: course.status,
       description: course.description,
       dosen: course.dosen,
     );
 
-    // Simpan di cache agar muncul di GET berikutnya.
     _createdCourses.add(created);
-
     return created;
   }
+
+  Future<void> updateCourse(int id, Course course) async {
+    final isLocalOnly = id > 100;
+
+    if (!isLocalOnly) {
+      try {
+        final response = await http.put(
+          Uri.parse('$baseUrl/posts/$id'),
+          headers: {'Content-Type': 'application/json; charset=UTF-8'},
+          body: jsonEncode({
+            'id': id,
+            'title': course.title,
+            'body': course.description,
+            'userId': 1,
+            'code': course.code,
+            'credits': course.credits,
+            'status': course.status,
+          }),
+        );
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          print(
+            'PUT /posts/$id → HTTP ${response.statusCode} '
+            '(diabaikan, update lokal tetap dilakukan)',
+          );
+        }
+      } catch (e) {
+        print('PUT /posts/$id gagal: $e (diabaikan)');
+      }
+    }
+
+    final index = _createdCourses.indexWhere((c) => c.id == id);
+    if (index != -1) {
+      _createdCourses[index] = course;
+    }
+  }
+
 }
