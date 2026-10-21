@@ -144,6 +144,37 @@ class CourseProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> removeCourse(int id) async {
+    if (_isSaving) return false;
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _repository.deleteCourse(id);
+
+      final index = _courses.indexWhere((c) => c.id == id);
+      if (index != -1) {
+        final deletedCode = _courses[index].code;
+        
+        final newList = List<Course>.from(_courses)..removeAt(index);
+        _courses = newList;
+
+        if (_favorites.contains(deletedCode)) {
+          _favorites.remove(deletedCode);
+        }
+      }
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
 
   Course? findCourse({int? id, String? code}) {
     for (final c in _courses) {

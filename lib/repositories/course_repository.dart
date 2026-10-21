@@ -5,6 +5,7 @@ abstract class CourseRepository {
   Future<List<Course>> getCourses();
   Future<Course> createCourse(Course course);
   Future<void> updateCourse(int id, Course course);
+  Future<void> deleteCourse(int id);
 }
 
 class CourseRepositoryImpl implements CourseRepository {
@@ -20,5 +21,8 @@ class CourseRepositoryImpl implements CourseRepository {
 
   @override
   Future<void> updateCourse(int id, Course course) => _apiService.updateCourse(id, course);
+
+  @override
+  Future<void> deleteCourse(int id) => _apiService.deleteCourse(id);
 
 }

@@ -94,4 +94,23 @@ class CourseApiService {
     }
   }
 
+
+  Future<void> deleteCourse(int id) async {
+    final isLocalOnly = id > 100;
+
+    if (!isLocalOnly) {
+      try {
+        final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
+        
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          print('DELETE /posts/$id → HTTP ${response.statusCode} (diabaikan)');
+        }
+      } catch (e) {
+        print('DELETE /posts/$id gagal: $e (diabaikan)');
+      }
+    }
+
+    _createdCourses.removeWhere((c) => c.id == id);
+  }
+
 }

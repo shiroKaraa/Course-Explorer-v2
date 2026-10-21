@@ -31,6 +31,7 @@ class CourseDetailPage extends StatefulWidget {
 class _CourseDetailPageState extends State<CourseDetailPage> {
   bool _showFullDescription = false;
 
+  // ===== EDIT =====
   Future<void> _showEditDialog(Course current) async {
     final updated = await showDialog<bool>(
       context: context,
@@ -41,6 +42,54 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     if (!mounted) return;
     if (updated == true) {
       showMsg(context, 'Course berhasil diperbarui!', color: AppColors.success);
+    }
+  }
+
+  // ===== HAPUS =====
+  Future<void> _showDeleteDialog(Course current) async {
+    if (current.id == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Course?'),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus "${current.title}"? '
+          'Tindakan ini tidak dapat dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (ok != true || !mounted) return;
+
+    final provider = context.read<CourseProvider>();
+    final success = await provider.removeCourse(current.id!);
+
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.pop(context); 
+      showMsg(context, 'Course berhasil dihapus.', color: AppColors.success);
+    } else {
+      showMsg(
+        context,
+        'Gagal menghapus: ${provider.error}',
+        color: Colors.red,
+      );
     }
   }
 
@@ -63,56 +112,77 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
         ? 'Tidak ada deskripsi.'
         : course.description;
 
-    final canEdit = course.id != null;
+    final canManage = course.id != null;
 
     return DemoScaffold(
       body: ScrollPage([
         AppCard(
           padding: const EdgeInsets.all(16),
           borderColor: color.withValues(alpha: 0.4),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Icon(StatusHelper.icon(status), color: color, size: 28),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(course.title,
-                    style: ts(18, w: FontWeight.bold)),
-              ),
-              if (canEdit)
-                IconButton(
-                  onPressed: () => _showEditDialog(course),
-                  icon: const Icon(Icons.edit_outlined,
-                      color: AppColors.primary),
-                  tooltip: 'Edit Course',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(StatusHelper.icon(status), color: color, size: 28),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    course.title,
+                    style: ts(18, w: FontWeight.bold),
+                  ),
                 ),
-            ]),
-            gap(10),
-            Row(children: [
-              Text(course.summary, style: ts(13, color: Colors.black54)),
-              const Spacer(),
-              StatusHelper.badge(status),
-            ]),
-            gap(14),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 8,
-                backgroundColor: AppColors.border,
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppColors.success),
+                if (canManage)
+                  IconButton(
+                    onPressed: () => _showEditDialog(course),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.primary,
+                    ),
+                    tooltip: 'Edit Course',
+                  ),
+                if (canManage)
+                  IconButton(
+                    onPressed: () => _showDeleteDialog(course),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                    ),
+                    tooltip: 'Hapus Course',
+                  ),
+              ]),
+              gap(10),
+              Row(children: [
+                Text(course.summary, style: ts(13, color: Colors.black54)),
+                const Spacer(),
+                StatusHelper.badge(status),
+              ]),
+              gap(14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 8,
+                  backgroundColor: AppColors.border,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    AppColors.success,
+                  ),
+                ),
               ),
-            ),
-            gap(6),
-            Row(children: [
-              const Icon(Icons.trending_up,
-                  size: 14, color: AppColors.success),
-              const SizedBox(width: 6),
-              Text('Progress: ${(progress * 100).round()}%',
-                  style:
-                      ts(12, w: FontWeight.w600, color: AppColors.success)),
-            ]),
-          ]),
+              gap(6),
+              Row(children: [
+                const Icon(
+                  Icons.trending_up,
+                  size: 14,
+                  color: AppColors.success,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Progress: ${(progress * 100).round()}%',
+                  style: ts(12, w: FontWeight.w600, color: AppColors.success),
+                ),
+              ]),
+            ],
+          ),
         ),
         gap(),
         ...section(
@@ -126,10 +196,12 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                   crossFadeState: _showFullDescription
                       ? CrossFadeState.showSecond
                       : CrossFadeState.showFirst,
-                  firstChild: Text(desc,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: ts(13, height: 1.5)),
+                  firstChild: Text(
+                    desc,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: ts(13, height: 1.5),
+                  ),
                   secondChild: Text(desc, style: ts(13, height: 1.5)),
                 ),
                 const SizedBox(height: 8),
@@ -137,7 +209,8 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: () => setState(
-                        () => _showFullDescription = !_showFullDescription),
+                      () => _showFullDescription = !_showFullDescription,
+                    ),
                     icon: Icon(
                       _showFullDescription
                           ? Icons.expand_less
