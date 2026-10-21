@@ -1,28 +1,14 @@
 import '../models/course.dart';
-import '../services/course_api_service.dart';
+import '../services/course_data_source.dart'; 
 
-abstract class CourseRepository {
-  Future<List<Course>> getCourses();
-  Future<Course> createCourse(Course course);
-  Future<void> updateCourse(int id, Course course);
-  Future<void> deleteCourse(int id);
-}
 
-class CourseRepositoryImpl implements CourseRepository {
-  final CourseApiService _apiService; 
+class CourseRepository {
+  final CourseDataSource dataSource;
 
-  CourseRepositoryImpl(this._apiService);
+  CourseRepository(this.dataSource);
 
-  @override
-  Future<List<Course>> getCourses() => _apiService.getCourses(); 
-
-  @override
-  Future<Course> createCourse(Course course) => _apiService.createCourse(course);
-
-  @override
-  Future<void> updateCourse(int id, Course course) => _apiService.updateCourse(id, course);
-
-  @override
-  Future<void> deleteCourse(int id) => _apiService.deleteCourse(id);
-
+  Future<List<Course>> getCourses() => dataSource.getCourses();
+  Future<Course> createCourse(Course course) => dataSource.createCourse(course);
+  Future<void> updateCourse(int id, Course course) => dataSource.updateCourse(id, course);
+  Future<void> deleteCourse(int id) => dataSource.deleteCourse(id);
 }

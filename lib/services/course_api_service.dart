@@ -1,14 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/course.dart';
+import 'course_data_source.dart';
 
-class CourseApiService {
+class CourseApiService implements CourseDataSource {
   final String baseUrl;
 
   CourseApiService(this.baseUrl);
 
   final List<Course> _createdCourses = [];
 
+  @override
   Future<List<Course>> getCourses() async {
     final response = await http.get(Uri.parse('$baseUrl/posts'));
 
@@ -24,6 +26,7 @@ class CourseApiService {
     return [..._createdCourses.reversed, ...remote];
   }
 
+  @override
   Future<Course> createCourse(Course course) async {
     final response = await http.post(
       Uri.parse('$baseUrl/posts'),
@@ -58,7 +61,10 @@ class CourseApiService {
     return created;
   }
 
+  @override
   Future<void> updateCourse(int id, Course course) async {
+    // JSONPlaceholder hanya punya post id 1–100. Course lokal (id > 100)
+    // tidak dikenali server → skip HTTP.
     final isLocalOnly = id > 100;
 
     if (!isLocalOnly) {
@@ -78,12 +84,11 @@ class CourseApiService {
         );
 
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          print(
-            'PUT /posts/$id → HTTP ${response.statusCode} '
-            '(diabaikan, update lokal tetap dilakukan)',
-          );
+          // ignore: avoid_print
+          print('PUT /posts/$id → HTTP ${response.statusCode} (diabaikan)');
         }
       } catch (e) {
+        // ignore: avoid_print
         print('PUT /posts/$id gagal: $e (diabaikan)');
       }
     }
@@ -94,23 +99,23 @@ class CourseApiService {
     }
   }
 
-
+  @override
   Future<void> deleteCourse(int id) async {
     final isLocalOnly = id > 100;
 
     if (!isLocalOnly) {
       try {
         final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
-        
         if (response.statusCode < 200 || response.statusCode >= 300) {
+          // ignore: avoid_print
           print('DELETE /posts/$id → HTTP ${response.statusCode} (diabaikan)');
         }
       } catch (e) {
+        // ignore: avoid_print
         print('DELETE /posts/$id gagal: $e (diabaikan)');
       }
     }
 
     _createdCourses.removeWhere((c) => c.id == id);
   }
-
 }
