@@ -40,8 +40,12 @@ class _CourseDetailPageState extends State<CourseDetailPage> {
     );
 
     if (!mounted) return;
+
     if (updated == true) {
       showMsg(context, 'Course berhasil diperbarui!', color: AppColors.success);
+    } else if (updated == false) {
+      final errorMsg = context.read<CourseProvider>().error ?? 'Terjadi kesalahan.';
+      showMsg(context, 'Gagal: $errorMsg', color: Colors.red);
     }
   }
 

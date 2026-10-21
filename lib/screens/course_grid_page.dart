@@ -76,39 +76,90 @@ class _CourseGridPageState extends State<CourseGridPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
 
-    return Column(children: [
-      const Padding(
-        padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-        child: IdentityCard(
-          subtitle: 'Pendidikan Teknik Informatika • Semester 5',
-        ),
-      ),
+    return Stack(
+      children: [
+        Column(children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: IdentityCard(
+              subtitle: 'Pendidikan Teknik Informatika • Semester 5',
+            ),
+          ),
 
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => _showAddDialog(context),
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Tambah Course'),
-            style: outlined(AppColors.success, pad: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: InkWell(
+              onTap: () => _showAddDialog(context),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.success, Color(0xFF43A047)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.success.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    )
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Tambah Course Baru',
+                      style: ts(13, w: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          gap(8),
+
+          _SearchBar(
+            controller: _searchController,
+            query: _searchQuery,
+            onChanged: _onSearchChanged,
+            onClear: _clearSearch,
+          ),
+
+          const _FilterBar(),
+
+          Expanded(child: _body(context, provider)),
+        ]),
+
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton.small(
+            heroTag: 'refreshCourses',
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            tooltip: 'Refresh Data',
+            onPressed: () {
+              context.read<CourseProvider>().refresh();
+              showMsg(context, 'Memuat ulang data...', color: AppColors.primary);
+            },
+            child: provider.isLoading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.refresh),
           ),
         ),
-      ),
-      gap(8),
-
-      _SearchBar(
-        controller: _searchController,
-        query: _searchQuery,
-        onChanged: _onSearchChanged,
-        onClear: _clearSearch,
-      ),
-
-      const _FilterBar(),
-
-      Expanded(child: _body(context, provider)),
-    ]);
+      ],
+    );
   }
 
   Future<void> _showAddDialog(BuildContext context) async {
@@ -119,6 +170,7 @@ class _CourseGridPageState extends State<CourseGridPage> {
     );
 
     if (!context.mounted) return;
+
     if (saved == true) {
       courseFilter.value = 'all';
       _searchController.clear();
@@ -129,6 +181,9 @@ class _CourseGridPageState extends State<CourseGridPage> {
         'Course berhasil ditambahkan!',
         color: AppColors.success,
       );
+    } else if (saved == false) {
+      final errorMsg = context.read<CourseProvider>().error ?? 'Terjadi kesalahan.';
+      showMsg(context, 'Gagal: $errorMsg', color: Colors.red);
     }
   }
 
@@ -195,7 +250,7 @@ class _CourseGridPageState extends State<CourseGridPage> {
   ) =>
       LayoutBuilder(
         builder: (context, c) => GridView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 80), 
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columnsFor(c.maxWidth),
             crossAxisSpacing: 12,

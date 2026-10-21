@@ -72,16 +72,7 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
 
     if (!mounted) return;
 
-    if (ok) {
-      Navigator.pop(context, true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal: ${provider.error}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    Navigator.pop(context, ok);
   }
 
   @override
