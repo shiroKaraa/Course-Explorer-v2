@@ -156,19 +156,16 @@ class CourseProvider extends ChangeNotifier {
       final index = _courses.indexWhere((c) => c.id == id);
       if (index != -1) {
         final deletedCode = _courses[index].code;
-        
         final newList = List<Course>.from(_courses)..removeAt(index);
         _courses = newList;
-
-        if (_favorites.contains(deletedCode)) {
-          _favorites.remove(deletedCode);
-        }
+        _favorites.remove(deletedCode);
       }
 
       notifyListeners();
       return true;
     } catch (e) {
       _error = e.toString();
+      notifyListeners();   // ← TAMBAHAN
       return false;
     } finally {
       _isSaving = false;

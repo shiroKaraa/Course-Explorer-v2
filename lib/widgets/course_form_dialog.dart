@@ -7,7 +7,7 @@ import '../models/course.dart';
 import '../providers/course_provider.dart';
 
 class CourseFormDialog extends StatefulWidget {
-  final Course? initialCourse; 
+  final Course? initialCourse;
 
   const CourseFormDialog({super.key, this.initialCourse});
 
@@ -17,9 +17,11 @@ class CourseFormDialog extends StatefulWidget {
 
 class _CourseFormDialogState extends State<CourseFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  late TextEditingController _codeCtrl;
-  late TextEditingController _titleCtrl;
-  late TextEditingController _creditsCtrl;
+  late final TextEditingController _codeCtrl;
+  late final TextEditingController _titleCtrl;
+  late final TextEditingController _creditsCtrl;
+  late final TextEditingController _descCtrl;
+  late final TextEditingController _dosenCtrl;
   late String _status;
 
   bool get isEditMode => widget.initialCourse != null;
@@ -30,7 +32,13 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     final c = widget.initialCourse;
     _codeCtrl = TextEditingController(text: c?.code ?? '');
     _titleCtrl = TextEditingController(text: c?.title ?? '');
-    _creditsCtrl = TextEditingController(text: c?.credits.toString() ?? '');
+    _creditsCtrl = TextEditingController(
+      text: c == null ? '' : c.credits.toString(),
+    );
+    _descCtrl = TextEditingController(text: c?.description ?? '');
+    _dosenCtrl = TextEditingController(
+      text: (c == null || c.dosen == '-') ? '' : c.dosen,
+    );
     _status = c?.status ?? 'planned';
   }
 
@@ -39,6 +47,8 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     _codeCtrl.dispose();
     _titleCtrl.dispose();
     _creditsCtrl.dispose();
+    _descCtrl.dispose();
+    _dosenCtrl.dispose();
     super.dispose();
   }
 
@@ -46,16 +56,17 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     final course = Course(
-      id: widget.initialCourse?.id, 
+      id: widget.initialCourse?.id,
       code: _codeCtrl.text.trim(),
       title: _titleCtrl.text.trim(),
       credits: int.tryParse(_creditsCtrl.text.trim()) ?? 0,
       status: _status,
-      description: widget.initialCourse?.description ?? '', 
+      description: _descCtrl.text.trim(),
+      dosen: _dosenCtrl.text.trim().isEmpty ? '-' : _dosenCtrl.text.trim(),
     );
 
     final provider = context.read<CourseProvider>();
-    final ok = isEditMode 
+    final ok = isEditMode
         ? await provider.editCourse(course)
         : await provider.addCourse(course);
 
@@ -87,7 +98,7 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
             children: [
               TextFormField(
                 controller: _codeCtrl,
-                readOnly: isEditMode, 
+                readOnly: isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Kode (misal: MOB01)',
                   fillColor: isEditMode ? Colors.grey.shade200 : null,
@@ -114,6 +125,21 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
                 },
               ),
               gap(10),
+              TextFormField(
+                controller: _dosenCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Dosen (opsional)',
+                ),
+              ),
+              gap(10),
+              TextFormField(
+                controller: _descCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Deskripsi (opsional)',
+                ),
+                maxLines: 2,
+              ),
+              gap(10),
               DropdownButtonFormField<String>(
                 initialValue: _status,
                 decoration: const InputDecoration(labelText: 'Status'),
@@ -138,9 +164,11 @@ class _CourseFormDialogState extends State<CourseFormDialog> {
           style: filled(AppColors.primary, pad: 10),
           child: isSaving
               ? const SizedBox(
-                  width: 16, height: 16,
+                  width: 16,
+                  height: 16,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2, color: Colors.white,
+                    strokeWidth: 2,
+                    color: Colors.white,
                   ),
                 )
               : const Text('Simpan'),

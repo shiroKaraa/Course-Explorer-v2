@@ -10,7 +10,7 @@ class CourseSupabaseService implements CourseDataSource {
     final data = await _supabase
         .from('courses')
         .select()
-        .order('id', ascending: true);
+        .order('id', ascending: false);
 
     return (data as List)
         .map((e) => Course.fromJson(e as Map<String, dynamic>))
@@ -37,7 +37,7 @@ class CourseSupabaseService implements CourseDataSource {
 
       return Course.fromJson(data);
     } on PostgrestException catch (e) {
-      if (e.code == '23505') { 
+      if (e.code == '23505') {
         throw Exception('Kode course "${course.code}" sudah digunakan.');
       }
       throw Exception('Database error: ${e.message}');
@@ -55,10 +55,7 @@ class CourseSupabaseService implements CourseDataSource {
     };
 
     try {
-      await _supabase
-          .from('courses')
-          .update(updateData)
-          .eq('id', id);
+      await _supabase.from('courses').update(updateData).eq('id', id);
     } on PostgrestException catch (e) {
       throw Exception('Database error: ${e.message}');
     }
@@ -67,13 +64,9 @@ class CourseSupabaseService implements CourseDataSource {
   @override
   Future<void> deleteCourse(int id) async {
     try {
-      await _supabase
-          .from('courses')
-          .delete()
-          .eq('id', id);
+      await _supabase.from('courses').delete().eq('id', id);
     } on PostgrestException catch (e) {
       throw Exception('Database error: ${e.message}');
     }
   }
-
 }
