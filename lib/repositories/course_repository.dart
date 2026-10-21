@@ -3,6 +3,7 @@ import '../services/course_api_service.dart';
 
 abstract class CourseRepository {
   Future<List<Course>> getCourses();
+  Future<Course> createCourse(Course course);
 }
 
 class CourseRepositoryImpl implements CourseRepository {
@@ -12,4 +13,7 @@ class CourseRepositoryImpl implements CourseRepository {
 
   @override
   Future<List<Course>> getCourses() => _apiService.getCourses(); 
+
+  @override
+  Future<Course> createCourse(Course course) => _apiService.createCourse(course);
 }

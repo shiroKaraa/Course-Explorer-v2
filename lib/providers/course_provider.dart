@@ -49,7 +49,6 @@ class CourseProvider extends ChangeNotifier {
   }
 
   Future<void> loadCourses() {
-    // Dedupe: kalau sudah ada load berjalan, kembalikan future yang sama.
     if (_inFlightLoad != null) return _inFlightLoad!;
 
     _inFlightLoad = _doLoad();
@@ -79,5 +78,39 @@ class CourseProvider extends ChangeNotifier {
     _hasLoaded = false;
     _error = null;
     await loadCourses();
+  }
+
+  // ===== TAMBAHAN TAHAP 6 =====
+  bool _isSaving = false;
+  bool get isSaving => _isSaving;
+
+  Future<bool> addCourse(Course course) async {
+    if (_isSaving) return false;
+    _isSaving = true;
+    notifyListeners();
+
+    try {
+      final created = await _repository.createCourse(course);
+
+      // Optimistic insert: langsung tampilkan di list tanpa menunggu GET.
+      // Ini penting karena JSONPlaceholder tidak menyimpan POST.
+      _courses = [created, ..._courses];
+      _hasLoaded = true;
+      _error = null;
+      notifyListeners();
+
+      // (Opsional) Sinkronisasi ulang dengan server.
+      // Kalau ingin lebih hemat, baris ini bisa dihapus.
+      // await refresh();
+
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
   }
 }

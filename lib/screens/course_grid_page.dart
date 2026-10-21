@@ -6,8 +6,9 @@ import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
-import '../widgets/error_view.dart';
 import '../widgets/course_card.dart';
+import '../widgets/course_form_dialog.dart';
+import '../widgets/error_view.dart';
 import '../widgets/identity_card.dart';
 import 'course_detail_page.dart';
 
@@ -83,6 +84,20 @@ class _CourseGridPageState extends State<CourseGridPage> {
         ),
       ),
 
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _showAddDialog(context),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Tambah Course'),
+            style: outlined(AppColors.success, pad: 10),
+          ),
+        ),
+      ),
+      gap(8),
+
       _SearchBar(
         controller: _searchController,
         query: _searchQuery,
@@ -96,13 +111,34 @@ class _CourseGridPageState extends State<CourseGridPage> {
     ]);
   }
 
+  Future<void> _showAddDialog(BuildContext context) async {
+    final saved = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const CourseFormDialog(),
+    );
+
+    if (!context.mounted) return;
+    if (saved == true) {
+      courseFilter.value = 'all';
+      _searchController.clear();
+      setState(() => _searchQuery = '');
+
+      showMsg(
+        context,
+        'Course berhasil ditambahkan!',
+        color: AppColors.success,
+      );
+    }
+  }
+
   Widget _body(BuildContext context, CourseProvider provider) {
     if (provider.isLoading && !provider.hasLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (provider.error != null && !provider.hasLoaded) {
-      return ErrorView( 
+      return ErrorView(
         message: provider.error!,
         onRetry: () => context.read<CourseProvider>().refresh(),
       );
@@ -123,27 +159,6 @@ class _CourseGridPageState extends State<CourseGridPage> {
 
     return _grid(context, filtered, provider);
   }
-
-  Widget _errorState(String message) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-            gap(10),
-            Text('Gagal memuat data',
-                style: ts(15, w: FontWeight.bold, color: Colors.red)),
-            gap(6),
-            hint(message),
-            gap(16),
-            ElevatedButton.icon(
-              onPressed: () => context.read<CourseProvider>().refresh(),
-              icon: const Icon(Icons.refresh, size: 16),
-              label: const Text('Coba Lagi'),
-              style: filled(AppColors.primary, pad: 10),
-            ),
-          ]),
-        ),
-      );
 
   Widget _emptyState({required String query, required String filter}) {
     final isSearching = query.trim().isNotEmpty;
@@ -292,14 +307,14 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<String>(
         valueListenable: courseFilter,
-        builder: (_, active, _) => SizedBox(   
+        builder: (_, active, _) => SizedBox(
           height: 44,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             itemCount: _filterOptions.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),  
-            itemBuilder: (_, i) {                                   
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
               final (key, label, icon) = _filterOptions[i];
               final selected = active == key;
               return ChoiceChip(
