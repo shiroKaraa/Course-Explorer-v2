@@ -65,7 +65,15 @@ class CourseSupabaseService implements CourseDataSource {
   }
 
   @override
-  Future<void> deleteCourse(int id) {
-    throw UnimplementedError('Akan diimplementasikan di Tahap 15');
+  Future<void> deleteCourse(int id) async {
+    try {
+      await _supabase
+          .from('courses')
+          .delete()
+          .eq('id', id);
+    } on PostgrestException catch (e) {
+      throw Exception('Database error: ${e.message}');
+    }
   }
+
 }
