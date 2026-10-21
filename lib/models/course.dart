@@ -1,4 +1,5 @@
 class Course {
+  final int? id; // TAMBAHAN: Nullable karena data lokal (asset JSON) belum tentu punya ID
   final String code;
   final String title;
   final int credits;
@@ -7,6 +8,7 @@ class Course {
   final String dosen;
 
   const Course({
+    this.id,
     required this.code,
     required this.title,
     required this.credits,
@@ -16,12 +18,23 @@ class Course {
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
+    // Karena JSONPlaceholder tidak punya field 'code', kita buat tiruannya dari ID.
+    // Jika ada field 'code' (misal dari API dosen), gunakan itu.
+    final rawId = json['id'];
+    final id = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
+    
+    final code = json['code'] as String? ?? 'POST-${id ?? 'X'}';
+
     return Course(
-      code: (json['code'] ?? '') as String,
+      id: id,
+      code: code,
       title: (json['title'] ?? 'Tanpa Judul') as String,
-      credits: _asInt(json['credits']),
+      // JSONPlaceholder tidak punya 'credits', kita beri default 2
+      credits: _asInt(json['credits'] ?? 2), 
+      // JSONPlaceholder tidak punya 'status', kita beri default 'planned'
       status: (json['status'] ?? 'planned') as String,
-      description: (json['description'] ?? '') as String,
+      // JSONPlaceholder punya 'body', kita map ke 'description'
+      description: (json['description'] ?? json['body'] ?? '') as String,
       dosen: (json['dosen'] ?? '-') as String,
     );
   }
@@ -34,6 +47,7 @@ class Course {
   }
 
   Map<String, dynamic> toJson() => {
+        'id': id,
         'code': code,
         'title': title,
         'credits': credits,
