@@ -1,5 +1,5 @@
 class Course {
-  final int? id; // TAMBAHAN: Nullable karena data lokal (asset JSON) belum tentu punya ID
+  final int? id; 
   final String code;
   final String title;
   final int credits;
@@ -18,8 +18,6 @@ class Course {
   });
 
   factory Course.fromJson(Map<String, dynamic> json) {
-    // Karena JSONPlaceholder tidak punya field 'code', kita buat tiruannya dari ID.
-    // Jika ada field 'code' (misal dari API dosen), gunakan itu.
     final rawId = json['id'];
     final id = rawId is int ? rawId : int.tryParse(rawId?.toString() ?? '');
     
@@ -29,11 +27,8 @@ class Course {
       id: id,
       code: code,
       title: (json['title'] ?? 'Tanpa Judul') as String,
-      // JSONPlaceholder tidak punya 'credits', kita beri default 2
       credits: _asInt(json['credits'] ?? 2), 
-      // JSONPlaceholder tidak punya 'status', kita beri default 'planned'
       status: (json['status'] ?? 'planned') as String,
-      // JSONPlaceholder punya 'body', kita map ke 'description'
       description: (json['description'] ?? json['body'] ?? '') as String,
       dosen: (json['dosen'] ?? '-') as String,
     );

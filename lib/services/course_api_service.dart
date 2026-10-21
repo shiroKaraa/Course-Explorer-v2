@@ -63,8 +63,6 @@ class CourseApiService implements CourseDataSource {
 
   @override
   Future<void> updateCourse(int id, Course course) async {
-    // JSONPlaceholder hanya punya post id 1–100. Course lokal (id > 100)
-    // tidak dikenali server → skip HTTP.
     final isLocalOnly = id > 100;
 
     if (!isLocalOnly) {
@@ -84,11 +82,9 @@ class CourseApiService implements CourseDataSource {
         );
 
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          // ignore: avoid_print
           print('PUT /posts/$id → HTTP ${response.statusCode} (diabaikan)');
         }
       } catch (e) {
-        // ignore: avoid_print
         print('PUT /posts/$id gagal: $e (diabaikan)');
       }
     }
@@ -107,11 +103,9 @@ class CourseApiService implements CourseDataSource {
       try {
         final response = await http.delete(Uri.parse('$baseUrl/posts/$id'));
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          // ignore: avoid_print
           print('DELETE /posts/$id → HTTP ${response.statusCode} (diabaikan)');
         }
       } catch (e) {
-        // ignore: avoid_print
         print('DELETE /posts/$id gagal: $e (diabaikan)');
       }
     }
