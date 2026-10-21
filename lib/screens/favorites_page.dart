@@ -6,6 +6,7 @@ import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../widgets/error_view.dart';
 import '../widgets/course_card.dart';
 import 'course_detail_page.dart';
 
@@ -46,13 +47,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
     if (provider.isLoading && !provider.hasLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
+
     if (provider.error != null && !provider.hasLoaded) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text('Gagal memuat data: ${provider.error}',
-              style: const TextStyle(color: Colors.red)),
-        ),
+      return ErrorView(
+        message: provider.error!,
+        onRetry: () => context.read<CourseProvider>().refresh(),
       );
     }
 

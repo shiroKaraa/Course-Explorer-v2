@@ -6,6 +6,7 @@ import '../core/legacy_globals.dart';
 import '../core/ui_helpers.dart';
 import '../models/course.dart';
 import '../providers/course_provider.dart';
+import '../widgets/error_view.dart';
 import '../widgets/course_card.dart';
 import '../widgets/identity_card.dart';
 import 'course_detail_page.dart';
@@ -99,12 +100,15 @@ class _CourseGridPageState extends State<CourseGridPage> {
     if (provider.isLoading && !provider.hasLoaded) {
       return const Center(child: CircularProgressIndicator());
     }
+
     if (provider.error != null && !provider.hasLoaded) {
-      return _errorState(provider.error!);
+      return ErrorView( 
+        message: provider.error!,
+        onRetry: () => context.read<CourseProvider>().refresh(),
+      );
     }
 
     final favs = provider.favorites;
-
     final filtered = provider.courses
         .where((c) => _matchesFilter(courseFilter.value, c, favs))
         .where((c) => _matchesSearch(_searchQuery, c))
@@ -288,14 +292,14 @@ class _FilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<String>(
         valueListenable: courseFilter,
-        builder: (_, active, _) => SizedBox(   // ← (_, __) jadi (_, _)
+        builder: (_, active, _) => SizedBox(   
           height: 44,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             itemCount: _filterOptions.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),  // ← FIXED
-            itemBuilder: (_, i) {                                   // ← FIXED
+            separatorBuilder: (_, _) => const SizedBox(width: 8),  
+            itemBuilder: (_, i) {                                   
               final (key, label, icon) = _filterOptions[i];
               final selected = active == key;
               return ChoiceChip(

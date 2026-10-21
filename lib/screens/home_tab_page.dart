@@ -6,6 +6,7 @@ import '../core/ui_helpers.dart';
 import '../providers/course_provider.dart';
 import '../widgets/app_card.dart';
 import '../widgets/fade_in.dart';
+import '../widgets/error_view.dart';
 import '../widgets/favorite_section_card.dart';
 import '../widgets/identity_card.dart';
 import '../widgets/mini_quiz_card.dart';
@@ -151,16 +152,29 @@ class _RecentCourses extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<CourseProvider>();
-    if (!provider.hasLoaded) {
+
+    if (provider.isLoading && !provider.hasLoaded) {
       return const Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(24),
         child: Center(child: CircularProgressIndicator()),
       );
     }
+
+    if (provider.error != null && !provider.hasLoaded) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: ErrorView(
+          message: provider.error!,
+          onRetry: () => context.read<CourseProvider>().refresh(),
+        ),
+      );
+    }
+
     final recent = provider.courses.take(3).toList();
     if (recent.isEmpty) {
       return AppCard(child: hint('Belum ada course.'));
     }
+    
     return Column(children: [
       for (final c in recent)
         Padding(
@@ -170,7 +184,7 @@ class _RecentCourses extends StatelessWidget {
             child: ListTile(
               leading: Icon(StatusHelper.icon(c.status),
                   color: StatusHelper.color(c.status)),
-              title: Text(c.title),
+              title: Text(c.title, maxLines: 1, overflow: TextOverflow.ellipsis),
               subtitle: Text(c.summary),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => openCourse(context, c),
