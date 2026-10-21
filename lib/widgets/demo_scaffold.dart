@@ -7,26 +7,29 @@ class DemoScaffold extends StatelessWidget {
   final Widget body;
   final Widget? bottomNavigationBar;
   final bool showAppBar;
+  final List<Widget>? actions; 
 
   const DemoScaffold({
     super.key,
     required this.body,
     this.bottomNavigationBar,
     this.showAppBar = true,
+    this.actions, 
   });
 
   @override
   Widget build(BuildContext context) => Scaffold(
         backgroundColor: AppColors.bg,
-        appBar: showAppBar ? _buildAppBar() : null,
+        appBar: showAppBar ? _buildAppBar(context) : null,
         body: body,
         bottomNavigationBar: bottomNavigationBar,
       );
 
-  PreferredSizeWidget _buildAppBar() => AppBar(
+  PreferredSizeWidget _buildAppBar(BuildContext context) => AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
+        actions: actions, 
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

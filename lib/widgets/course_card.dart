@@ -128,31 +128,37 @@ class _CourseCardState extends State<CourseCard>
             ),
           ),
         ),
+        
         Row(children: [
           Expanded(
-            child: Text('Dosen: ${course.dosen}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style:
-                    ts(10, color: Colors.black45, italic: FontStyle.italic)),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  course.dosen.isEmpty ? 'Tanpa Dosen' : course.dosen,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ts(10, w: FontWeight.w600, color: AppColors.primary),
+                ),
+              ),
+            ),
           ),
+          
           InkWell(
             onTap: _toggleDescription,
             borderRadius: BorderRadius.circular(20),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              child: Row(children: [
-                Text(_showDescription ? 'Tutup' : 'Detail',
-                    style: ts(10,
-                        w: FontWeight.bold, color: AppColors.primary)),
-                Icon(
-                  _showDescription
-                      ? Icons.keyboard_arrow_up
-                      : Icons.keyboard_arrow_down,
-                  size: 14,
-                  color: AppColors.primary,
-                ),
-              ]),
+              child: Icon(
+                _showDescription ? Icons.visibility_off : Icons.visibility,
+                size: 18,
+                color: AppColors.primary,
+              ),
             ),
           ),
           const SizedBox(width: 4),

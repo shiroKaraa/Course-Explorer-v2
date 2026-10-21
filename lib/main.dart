@@ -6,9 +6,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/app_colors.dart';
 import 'core/app_strings.dart';
 import 'core/app_config.dart';
-import 'core/legacy_globals.dart';
 import 'providers/course_provider.dart';
+import 'repositories/course_repository.dart';
 import 'screens/main_shell_page.dart';
+import 'services/course_data_source.dart';
+import 'services/course_supabase_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,16 +22,21 @@ Future<void> main() async {
     publishableKey: AppConfig.supabaseAnonKey,
   );
 
-  runApp(const MyApp());
+  final CourseDataSource dataSource = CourseSupabaseService();
+
+  final CourseRepository repository = CourseRepository(dataSource);
+
+  runApp(MyApp(repository: repository));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final CourseRepository repository;
+  const MyApp({super.key, required this.repository});
 
   @override
   Widget build(BuildContext context) =>
       ChangeNotifierProvider<CourseProvider>(
-        create: (_) => CourseProvider(courseRepository),
+        create: (_) => CourseProvider(repository),
         child: const MaterialAppShell(),
       );
 }
